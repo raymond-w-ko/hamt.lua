@@ -49,6 +49,9 @@ local function fromBitmap(bitmap, bit)
   return popcount(band(bitmap, bit - 1))
 end
 
+-- Array Ops
+--------------------------------------------------------------------------------
+
 function M.arrayUpdate(index, new_value, array)
   index = index + 1
 
