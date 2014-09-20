@@ -51,3 +51,9 @@ print('-------------------------------------------------------------------------
 local arr1 = hamt.arraySpliceIn(2, 'peanuts', arr)
 print(table.show(arr1))
 print(table.show(arr))
+
+print(string.format('%x', hamt.hash('asdf')))
+local text = {}
+for i = 1, 100000 do table.insert(text, 'a') end
+text = table.concat(text)
+print(string.format('%x', hamt.hash(text)))

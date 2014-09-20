@@ -22,6 +22,7 @@ local band = bit.band
 local arshift = bit.arshift
 local rshift = bit.rshift
 local lshift = bit.lshift
+local tobit = bit.tobit
 do 
   local m1 = 0x55555555
   local m2 = 0x33333333
@@ -106,5 +107,19 @@ function M.arraySpliceIn(index, new_value, array)
   return out
 end
 local arraySpliceIn = M.arraySpliceIn
+
+--------------------------------------------------------------------------------
+-- get 32 bit hash of string
+function M.hash(str)
+  if type(str) == 'number' then return str end
+
+  local h = 0
+  for i = 1, str:len() do
+    h = tobit((lshift(h, 5) - h) + str:byte(i))
+  end
+  return h
+end
+local hash = M.hash
+--------------------------------------------------------------------------------
 
 return M

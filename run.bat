@@ -1,1 +1,1 @@
-..\luajit-2.0\src\luajit.exe -jv tests.lua
+..\luajit-2.0\src\luajit.exe -jv -jdump tests.lua
