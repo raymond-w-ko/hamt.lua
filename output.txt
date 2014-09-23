@@ -1,0 +1,84 @@
+popcount
+--------------------------------------------------------------------------------
+peristent array update
+--------------------------------------------------------------------------------
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "psycho";
+   [3] = "mandarin";
+   [4] = "surgeon";
+};
+
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "mandarin";
+   [4] = "surgeon";
+};
+
+peristent array remove
+--------------------------------------------------------------------------------
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "mandarin";
+   [3] = "surgeon";
+};
+
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "mandarin";
+   [4] = "surgeon";
+};
+
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "mandarin";
+};
+
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "mandarin";
+   [4] = "surgeon";
+};
+
+__unnamed__ = {
+   [1] = "clown";
+   [2] = "mandarin";
+   [3] = "surgeon";
+};
+
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "mandarin";
+   [4] = "surgeon";
+};
+
+peristent array add
+--------------------------------------------------------------------------------
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "peanuts";
+   [4] = "mandarin";
+   [5] = "surgeon";
+};
+
+__unnamed__ = {
+   [1] = "angel";
+   [2] = "clown";
+   [3] = "mandarin";
+   [4] = "surgeon";
+};
+
+2dd434
+fffffffffbad6a00
+elapsed time: 0.000
+
+elapsed time: 0.001
+
+elapsed time: 0.000
+
