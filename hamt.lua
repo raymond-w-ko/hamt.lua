@@ -381,4 +381,24 @@ lookup = function(node, shift, hash, key)
   end
 end
 
+local alter
+
+function Leaf:modify(shift, fn, hash, key)
+  if self.key == key then
+    local value = fn(self.value)
+    if value == nothing then
+      return nil
+    else
+      return Leaf.new(hash, key, value)
+    end
+  else
+    local value = fn()
+    if value == nothing then
+      return self
+    else
+      return mergeLeaves(shift, self, Leaf.new(hash, key, value))
+    end
+  end
+end
+
 return M
