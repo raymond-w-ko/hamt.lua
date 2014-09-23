@@ -23,7 +23,6 @@ assert(popcount(0xFFFFFFFF + 1) == 0)
 assert(popcount(0xFFFFFFFF + 2) == 1)
 
 local arr = {'angel', 'clown', 'mandarin', 'surgeon'}
-print(table.show(arr))
 
 print('peristent array update')
 print('--------------------------------------------------------------------------------')
@@ -57,3 +56,74 @@ local text = {}
 for i = 1, 100000 do table.insert(text, 'a') end
 text = table.concat(text)
 print(string.format('%x', hamt.hash(text)))
+
+local function benchmark(fn)
+  collectgarbage()
+  local x = os.clock()
+  for i = 1, 2000000 do
+    --fn()
+  end
+  print(string.format("elapsed time: %.3f\n", os.clock() - x))
+end
+
+-- ranked in order of speed, 3rd approach seems to confuse JIT
+local function copyarray1(array)
+  local out = {}
+  for i = 1, #array do
+    out[i] = array[i]
+  end
+  return out
+end
+
+local function copyarray2(array)
+  local out = {}
+  local i = 1
+  while true do
+    local item = array[i]
+    if item == nil then break end
+    out[i] = item
+    i = i + 1
+  end
+  return out
+end
+
+local function copyarray3(array)
+  local out = {}
+  local i = 1
+  local item
+  repeat
+    item = array[i]
+    out[i] = item
+    i = i + 1
+  until item == nil
+  return out
+end
+
+
+local src = {
+  0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+  --1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+  --1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+  --2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+  --1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+  --2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+  --2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+  --3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
+};
+
+local dst
+
+local function fn1()
+  dst = copyarray1(src)
+end
+benchmark(fn1)
+
+local function fn2()
+  dst = copyarray2(src)
+end
+benchmark(fn2)
+
+local function fn3()
+  dst = copyarray3(src)
+end
+benchmark(fn3)
