@@ -7,6 +7,7 @@ local arshift
 local rshift
 local lshift
 local tobit
+local bor
 -- LuaJIT has builtin bit manipulation primitives that get JITed, so use these
 if type(jit) == 'table' then
   band = bit.band
@@ -14,6 +15,7 @@ if type(jit) == 'table' then
   rshift = bit.rshift
   lshift = bit.lshift
   tobit = bit.tobit
+  bor = bit.bor
 else
   -- TODO: if not running in LuaJIT, other bit manipulation functions are
   -- necessary
@@ -204,14 +206,20 @@ end
 --------------------------------------------------------------------------------
 
 local function isLeaf(node)
-  if node == nil then return true end
+  if node == nil then
+    return true
+  end
+
   local mt = getmetatable(node)
   if mt == LeafMetatable or mt == CollisionMetatable then
     return true
   end
+
   return false
 end
 
+-- Does the inverse of the function below, given a "packed" array and a decoding bitmap
+-- return a full size array with holes.
 local function expand(frag, child, bitmap, subNodes)
   local arr = {}
   local count = 0
@@ -219,7 +227,7 @@ local function expand(frag, child, bitmap, subNodes)
   local i = 0
   while bitmap ~= 0 do
     if band(bitmap, 1) == 1 then
-      arr[i] = subNodes[count]
+      arr[i + 1] = subNodes[count + 1] -- NOTICE: 0 index to 1 index
       count = count + 1
     end
     bit = rshift(bit, 1)
@@ -227,7 +235,41 @@ local function expand(frag, child, bitmap, subNodes)
     i = i + 1
   end
 
-  arr[frag] = child
+  arr[frag + 1] = child -- NOTICE: 0 index to 1 index
+  return ArrayNode.new(count + 1, arr)
+end
+
+-- Given an array and an index created an IndexedNode with all the elements in
+-- that array except that index. Also constructs a bitmap for the IndexedNode
+-- to mark which slots are filled in the "virtual array".
+--
+-- so given something like { 1, 2, nil, nil, nil, nil, nil, 8 }
+-- IndexedNode would actually contain
+-- {1, 2, 8} and a decoding bitmap of 0b10000011 to save space
+local function pack(removed_index, elements)
+  local children = {}
+  local next_children_index = 1
+  local bitmap = 0
+  
+  local i = 0
+  local len = #elements
+  while i < len do
+    local elem = elements[i + 1] -- NOTICE: 0 index to 1 index
+    if i ~= removed_index and elem then
+      -- table.insert(children, elem)
+      children[next_children_index] = elem
+      next_children_index = next_children_index + 1
+
+      bitmap = bor(bitmap, lshift(1, i))
+    end
+
+    i = i + 1
+  end
+
+  return IndexedNode.new(bitmap, children)
+end
+
+local function mergeLeaves(shift, n1, n2)
 end
 
 return M

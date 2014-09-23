@@ -82,13 +82,11 @@ define(["require", "exports"], (function (require, exports) {
         pack = (function (removed, elements) {
             var children = [],
                 bitmap = 0;
-            for (var i = 0, len = elements.length;
-                (i < len);
-                (i = (i + 1))) {
+            for (var i = 0, len = elements.length; (i < len); (i = (i + 1))) {
                 var elem = elements[i];
                 if (((i !== removed) && (!(!elem)))) {
                     children.push(elem);
-                    (bitmap = (bitmap | (1 << i)));
+                    bitmap = (bitmap | (1 << i));
                 }
             }
             return new(IndexedNode)(bitmap, children);
