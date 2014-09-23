@@ -327,4 +327,58 @@ local function updateCollisionList(hash, list, update_fn, key)
   end
 end
 
+local lookup
+
+function Leaf:lookup(_1, _2, key)
+  if self.key == key then
+    return self.value
+  else
+    return nothing
+  end
+end
+
+function Collision:lookup(_, hash, key)
+  if hash == self.hash then
+    local children = self.children
+    local i = 0
+    local len = #children
+    while i < len do
+      local child = children[i + 1] -- NOTICE: 0 index to 1 index
+      if child.key == key then
+        return child.value
+      end
+
+      i = i + 1
+    end
+  end
+  return nothing
+end
+
+function IndexedNode:lookup(shift, hash, key)
+  local frag = band(rshift(hash, shift), MASK)
+  local bitmap = lshift(1, frag)
+  local mask = self.mask
+  if band(mask, bitmap) ~= 0 then
+    local index = popcount(band(mask, bitmap - 1))
+    local node = self.children[index]
+    return lookup(node, shift + SIZE, hash, key)
+  else
+    return nothing
+  end
+end
+
+function ArrayNode:lookup(shift, hash, key)
+  local frag = band(rshift(hash, shift), MASK)
+  local child = self.children[frag]
+  return lookup(child, shift + SIZE, hash, key)
+end
+
+lookup = function(node, shift, hash, key)
+  if node == nil then
+    return nothing
+  else
+    return node:lookup(shift, hash, key)
+  end
+end
+
 return M

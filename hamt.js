@@ -133,12 +133,11 @@ define(["require", "exports"], (function (require, exports) {
     }));
     (Collision.prototype.lookup = (function (_, h, k) {
         var self = this;
-        if ((h === self.hash)) {
-            for (var i = 0, len = self.children.length;
-                (i < len);
-                (i = (i + 1))) {
+        if (h === self.hash) {
+            for (var i = 0, len = self.children.length; (i < len); i = i + 1) {
                 var child = self.children[i];
-                if ((k === child.key)) return child.value;
+                if (k === child.key)
+                    return child.value;
             }
         }
         return nothing;
@@ -146,10 +145,13 @@ define(["require", "exports"], (function (require, exports) {
     (IndexedNode.prototype.lookup = (function (shift, h, k) {
         var self = this,
             frag = ((h >>> shift) & mask),
-            bit = (1 << frag),
-            bitmap;
-        return ((self.mask & bit) ? lookup(self.children[((bitmap = self.mask), popcount((bitmap & (bit -
-            1))))], (shift + 5), h, k) : nothing);
+            bit = (1 << frag);
+        if (self.mask & bit) {
+            var n = self.children[popcount(self.mask & (bit - 1))];
+            return lookup(n, (shift + 5), h, k)
+        } else {
+            return nothing;
+        }
     }));
     (ArrayNode.prototype.lookup = (function (shift, h, k) {
         var self = this,
