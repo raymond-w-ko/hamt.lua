@@ -269,7 +269,62 @@ local function pack(removed_index, elements)
   return IndexedNode.new(bitmap, children)
 end
 
-local function mergeLeaves(shift, n1, n2)
+local function mergeLeaves(shift, node1, node2)
+  local hash1 = node1.hash
+  local hash2 = node2.hash
+
+  if hash1 == hash2 then
+    return Collision.new(hash1, {node2, node1})
+  else
+    -- hash fragment
+    local subhash1 = band(rshift(hash1, shift), MASK)
+    -- hash fragment
+    local subhash2 = band(rshift(hash2, shift), MASK)
+    -- toBitmap | toBitmap
+    local bitmap = bor(lshift(1, subhash1), lshift(1, subhash2))
+
+    local children
+    if subhash1 == subhash2 then
+      children = {mergeLeaves(shift + SIZE, node1, node2)}
+    else
+      if subhash1 < subhash2 then
+        children = {node1, node2}
+      else
+        children = {node2, node1}
+      end
+    end
+
+    return IndexedNode.new(bitmap, children)
+  end
+end
+
+local function updateCollisionList(hash, list, update_fn, key)
+  local target
+  local i = 0
+
+  local len = #list
+  while i < len do
+    local child = list[i + 1] -- NOTICE: 0 index to 1 index
+    if child.key == key then
+      target = key
+      break
+    end
+
+    i = i + 1
+  end
+
+  local value
+  if target then
+    value = update_fn(target.value)
+  else
+    value = update_fn()
+  end
+
+  if value == nothing then
+    return arraySpliceOut(i, list)
+  else
+    return arrayUpdate(i, Leaf.new(hash, key, value), list)
+  end
 end
 
 return M

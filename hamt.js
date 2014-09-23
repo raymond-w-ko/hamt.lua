@@ -95,25 +95,36 @@ define(["require", "exports"], (function (require, exports) {
             var h1 = n1.hash,
                 h2 = n2.hash,
                 subH1, subH2;
-            return ((h1 === h2) ? new(Collision)(h1, [n2, n1]) : ((subH1 = ((h1 >>> shift) & mask)), (subH2 =
-                ((h2 >>> shift) & mask)), new(IndexedNode)(((1 << subH1) | (1 << subH2)), ((subH1 ===
-                subH2) ? [mergeLeaves((shift + 5), n1, n2)] : ((subH1 < subH2) ? [n1, n2] : [
-                n2, n1
-            ])))));
+            if (h1 === h2) {
+                return new(Collision)(h1, [n2, n1])
+            } else {
+                subH1 = (h1 >>> shift) & mask;
+                subH2 = (h2 >>> shift) & mask;
+                var bitmap = (1 << subH1) | (1 << subH2);
+                var children;
+                if (subH1 === subH2) {
+                    children = [mergeLeaves((shift + 5), n1, n2)];
+                } else {
+                    children = (subH1 < subH2) ? [n1, n2] : [n2, n1];
+                }
+                return new(IndexedNode)(bitmap, children);
+            }
         }),
         updateCollisionList = (function (h, list, f, k) {
             var target, i = 0;
-            for (var len = list.length;
-                (i < len);
-                (i = (i + 1))) {
+            for (var len = list.length; (i < len); (i = (i + 1))) {
                 var child = list[i];
-                if ((child.key === k)) {
+                if (child.key === k) {
                     (target = child);
                     break;
                 }
             }
-            var v = (target ? f(target.value) : f());
-            return ((nothing === v) ? arraySpliceOut(i, list) : arrayUpdate(i, new(Leaf)(h, k, v), list));
+            var v = target ? f(target.value) : f();
+            if (nothing === v) {
+                return arraySpliceOut(i, list)
+            } else {
+                return arrayUpdate(i, new(Leaf)(h, k, v), list);
+            }
         }),
         lookup;
     (Leaf.prototype.lookup = (function (_, _0, k) {
