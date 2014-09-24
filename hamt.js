@@ -176,26 +176,43 @@ define(["require", "exports"], (function (require, exports) {
     (Collision.prototype.modify = (function (shift, f, h, k) {
         var self = this,
             list = updateCollisionList(self.hash, self.children, f, k);
-        return ((list.length > 1) ? new(Collision)(self.hash, list) : list[0]);
+        if (list.length > 1) {
+            return new(Collision)(self.hash, list)
+        } else {
+            return list[0];
+        }
     }));
     (IndexedNode.prototype.modify = (function (shift, f, h, k) {
-        var __o = this,
-            mask0 = __o["mask"],
-            children = __o["children"],
-            frag = ((h >>> shift) & mask),
-            bit = (1 << frag),
-            bitmap = mask0,
-            indx = popcount((bitmap & (bit - 1))),
-            exists = (mask0 & bit),
-            child = alter((exists ? children[indx] : null), (shift + 5), f, h, k),
-            removed = (exists && (!child)),
-            added = ((!exists) && (!(!child))),
-            bitmap0 = (removed ? (mask0 & (~bit)) : (added ? (mask0 | bit) : mask0));
-        return ((!bitmap0) ? null : (removed ? (((children.length <= 2) && isLeaf(children[(indx ^ 1)])) ?
-                children[(indx ^ 1)] : new(IndexedNode)(bitmap0, arraySpliceOut(indx, children))) :
-            (added ? ((children.length >= MAX_INDEX_NODE) ? expand(frag, child, mask0, children) :
-                new(IndexedNode)(bitmap0, arraySpliceIn(indx, child, children))) : new(
-                IndexedNode)(bitmap0, arrayUpdate(indx, child, children)))));
+        var self = this;
+        var mask0 = self["mask"];
+        var children = self["children"];
+        var frag = ((h >>> shift) & mask);
+        var bit = (1 << frag);
+        var indx = popcount((mask0 & (bit - 1)));
+        var exists = (mask0 & bit);
+        var child = alter((exists ? children[indx] : null), (shift + 5), f, h, k);
+        var removed = exists && (!child);
+        var added = (!exists) && (!(!child));
+
+        var bitmap0 =
+            removed ? (mask0 & (~bit)) :
+            (added ? (mask0 | bit) :
+             mask0);
+        if (!bitmap0) {
+            return null;
+        } else {
+            return
+                removed ?
+                    ((children.length <= 2) && isLeaf(children[(indx ^ 1)])) ?
+                         children[(indx ^ 1)] :
+                         new(IndexedNode)(bitmap0, arraySpliceOut(indx, children))
+                :
+                added ?
+                    (children.length >= MAX_INDEX_NODE) ?
+                        expand(frag, child, mask0, children) :
+                        new(IndexedNode)(bitmap0, arraySpliceIn(indx, child, children))
+                : new(IndexedNode)(bitmap0, arrayUpdate(indx, child, children));
+        }
     }));
     (ArrayNode.prototype.modify = (function (shift, f, h, k) {
         var __o = this,

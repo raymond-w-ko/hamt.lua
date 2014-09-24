@@ -8,6 +8,8 @@ local rshift
 local lshift
 local tobit
 local bor
+local bnot
+local bxor
 -- LuaJIT has builtin bit manipulation primitives that get JITed, so use these
 if type(jit) == 'table' then
   band = bit.band
@@ -16,6 +18,8 @@ if type(jit) == 'table' then
   lshift = bit.lshift
   tobit = bit.tobit
   bor = bit.bor
+  bnot = bit.bnot
+  bxor = bit.bxor
 else
   -- TODO: if not running in LuaJIT, other bit manipulation functions are
   -- necessary
@@ -220,13 +224,15 @@ end
 
 -- Does the inverse of the function below, given a "packed" array and a decoding bitmap
 -- return a full size array with holes.
-local function expand(frag, child, bitmap, subNodes)
+--
+--local function expand(frag, child, bitmap, subNodes)
+local function expand(frag, child, bit, subNodes)
   local arr = {}
   local count = 0
 
   local i = 0
-  while bitmap ~= 0 do
-    if band(bitmap, 1) == 1 then
+  while bit ~= 0 do
+    if band(bit, 1) == 1 then
       arr[i + 1] = subNodes[count + 1] -- NOTICE: 0 index to 1 index
       count = count + 1
     end
@@ -356,10 +362,10 @@ end
 
 function IndexedNode:lookup(shift, hash, key)
   local frag = band(rshift(hash, shift), MASK)
-  local bitmap = lshift(1, frag)
+  local bit = lshift(1, frag)
   local mask = self.mask
-  if band(mask, bitmap) ~= 0 then
-    local index = popcount(band(mask, bitmap - 1))
+  if band(mask, bit) ~= 0 then
+    local index = popcount(band(mask, bit - 1))
     local node = self.children[index]
     return lookup(node, shift + SIZE, hash, key)
   else
@@ -398,6 +404,63 @@ function Leaf:modify(shift, fn, hash, key)
     else
       return mergeLeaves(shift, self, Leaf.new(hash, key, value))
     end
+  end
+end
+
+function Collision:modify(shift, fn, hash, key)
+  local list = updateCollisionList(self.hash, self.children, fn, key)
+  if #list > 1 then
+    return Collision.new(self.hash, list)
+  else
+    return list[1] -- NOTICE: 0 index to 1 index
+  end
+end
+
+function IndexedNode:modify(shift, fn, hash, key)
+  local mask = self.mask
+  local children = self.children
+  local frag = band(rshift(hash, shift), MASK)
+  local bit = lshift(1, frag)
+  local index = popcount(band(mask, bit - 1))
+  local exists = band(mask, bit) ~= 0
+
+  local node
+  if exists then
+    node = children[index]
+  else
+    node = nil
+  end
+  local child = alter(node, shift + SIZE, fn, hash, key)
+
+  local removed = exists and (child == nil)
+  local added = (not exists) and (child ~= nil)
+
+  local bitmap
+  if removed then
+    bitmap = band(mask, bnot(bit))
+  elseif added then
+    bitmap = bor(mask, bit)
+  else
+    bitmap = mask
+  end
+
+  if bitmap == 0 then
+    return nil
+  elseif removed then
+    local node = children[bxor(index, 1)]
+    if #children <= 2 and isLeaf(node) then
+      return node
+    else
+      return IndexedNode.new(bitmap, arraySpliceOut(index, children))
+    end
+  elseif added then
+    if #children >= MAX_INDEX_NODE then
+      return expand(frag, child, mask, children)
+    else
+      return IndexedNode.new(bitmap, arraySpliceIn(index, child, children))
+    end
+  else
+    return IndexedNode.new(bitmap, arrayUpdate(index, child, children))
   end
 end
 
