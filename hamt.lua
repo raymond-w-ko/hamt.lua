@@ -496,4 +496,66 @@ alter = function(node, shift, fn, hash, key)
   end
 end
 
+-- Looup a value.
+--
+-- Returns the value stored for the given hash and key, or alt_fallback_value if none.
+function M.tryGetHash(alt_fallback_value, hash, key, hamt)
+  local value
+  if hamt == nil then
+    value = nothing
+  else
+    value = hamt:lookup(0, hash, key)
+  end
+  if value == nothing then
+    return alt_fallback_value
+  else
+    return value
+  end
+end
+
+-- Lookup a value using the internal hash.
+function M.tryGet(alt_fallback_value, key, hamt)
+  local h = hash(key)
+  local value
+  if hamt == nil then
+    value = nothing
+  else
+    value = hamt:lookup(0, h, key)
+  end
+  if value == nothing then
+    return alt_fallback_value
+  else
+    return value
+  end
+end
+
+function M.getHash(hash, key, hamt)
+  local value
+  if hamt == nil then
+    value = nothing
+  else
+    value = hamt:lookup(0, hash, key)
+  end
+  if value == nothing then
+    return nil
+  else
+    return value
+  end
+end
+
+function M.get(key, hamt)
+  local h = hash(key)
+  local value
+  if hamt == nil then
+    value = nothing
+  else
+    value = hamt:lookup(0, h, key)
+  end
+  if value == nothing then
+    return nil
+  else
+    return value
+  end
+end
+
 return M

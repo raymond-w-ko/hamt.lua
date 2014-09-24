@@ -241,12 +241,12 @@ define(["require", "exports"], (function (require, exports) {
                 : n.modify(shift, f, h, k);
     }));
     (tryGetHash = (function (alt, h, k, m) {
-        var val = ((!m) ? nothing : m.lookup(0, h, k));
+        var val = (!m) ? nothing : m.lookup(0, h, k);
         return ((nothing === val) ? alt : val);
     }));
     (tryGet = (function (alt, k, m) {
-        var h = hash(k),
-            val = ((!m) ? nothing : m.lookup(0, h, k));
+        var h = hash(k);
+        var val = (!m) ? nothing : m.lookup(0, h, k);
         return ((nothing === val) ? alt : val);
     }));
     (getHash = (function (h, k, m) {
@@ -254,8 +254,8 @@ define(["require", "exports"], (function (require, exports) {
         return ((nothing === val) ? null : val);
     }));
     (get = (function (k, m) {
-        var h = hash(k),
-            val = ((!m) ? nothing : m.lookup(0, h, k));
+        var h = hash(k);
+        var val = (!m) ? nothing : m.lookup(0, h, k);
         return ((nothing === val) ? null : val);
     }));
     (hasHash = (function (h, k, m) {
