@@ -464,4 +464,36 @@ function IndexedNode:modify(shift, fn, hash, key)
   end
 end
 
+function ArrayNode:modify(shift, fn, hash, key)
+  local count = self.count
+  local children = self.children
+  local frag = band(rshift(hash, shift), MASK)
+  local child = children[frag]
+  local newChild = alter(child, shift + SIZE, fn, hash, key)
+  if child == nil and newChild ~= nil then
+    return ArrayNode.new(count + 1, arrayUpdate(frag, newChild, children))
+  elseif child ~= nil and newChild == nil then
+    if (count - 1) <= MIN_ARRAY_NODE then
+      return pack(frag, children)
+    else
+      return ArrayNode.new(count - 1, arrayUpdate(frag, nil, children))
+    end
+  else
+    return ArrayNode.new(count, arrayUpdate(frag, newChild, children))
+  end
+end
+
+alter = function(node, shift, fn, hash, key)
+  if node == nil then
+    local value = fn()
+    if value == nothing then
+      return nil
+    else
+      return Leaf.new(hash, key, value)
+    end
+  else
+    return node:modify(shift, fn, hash, key)
+  end
+end
+
 return M

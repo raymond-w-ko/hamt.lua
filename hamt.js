@@ -215,21 +215,30 @@ define(["require", "exports"], (function (require, exports) {
         }
     }));
     (ArrayNode.prototype.modify = (function (shift, f, h, k) {
-        var __o = this,
-            count = __o["count"],
-            children = __o["children"],
-            frag = ((h >>> shift) & mask),
-            child = children[frag],
-            newChild = alter(child, (shift + 5), f, h, k);
-        return (((!child) && (!(!newChild))) ? new(ArrayNode)((count + 1), arrayUpdate(frag, newChild,
-            children)) : (((!(!child)) && (!newChild)) ? (((count - 1) <= MIN_ARRAY_NODE) ? pack(
-                frag, children) : new(ArrayNode)((count - 1), arrayUpdate(frag, null, children))) :
-            new(ArrayNode)(count, arrayUpdate(frag, newChild, children))));
+        var self = this;
+        var count = self["count"];
+        var children = self["children"];
+        var frag = ((h >>> shift) & mask);
+        var child = children[frag];
+        var newChild = alter(child, (shift + 5), f, h, k);
+        if ((!child) && (!(!newChild))) {
+            return new(ArrayNode)((count + 1), arrayUpdate(frag, newChild, children));
+        } else if ((!(!child)) && (!newChild)) {
+            return ((count - 1) <= MIN_ARRAY_NODE) ?
+                pack( frag, children) :
+                new(ArrayNode)((count - 1), arrayUpdate(frag, null, children))
+        } else {
+            return new(ArrayNode)(count, arrayUpdate(frag, newChild, children));
+        }
     }));
     (alter = (function (n, shift, f, h, k) {
         var v;
-        return ((!n) ? ((v = f()), ((nothing === v) ? null : new(Leaf)(h, k, v))) : n.modify(shift, f,
-            h, k));
+        return
+            (!n) ?
+                ((v = f()), ((nothing === v) ?
+                    null :
+                    new(Leaf)(h, k, v)))
+                : n.modify(shift, f, h, k);
     }));
     (tryGetHash = (function (alt, h, k, m) {
         var val = ((!m) ? nothing : m.lookup(0, h, k));
