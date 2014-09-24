@@ -558,4 +558,7 @@ function M.get(key, hamt)
   end
 end
 
+function M.hasHash(hash, key, hamt)
+end
+
 return M
