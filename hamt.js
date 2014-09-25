@@ -260,34 +260,53 @@ define(["require", "exports"], (function (require, exports) {
     }));
     (hasHash = (function (h, k, m) {
         var y;
-        return (!((y = ((!m) ? nothing : m.lookup(0, h, k))), (nothing === y)));
+        y = (!m) ? nothing : m.lookup(0, h, k);
+        return !(nothing === y);
     }));
     (has = (function (k, m) {
-        var h = hash(k),
-            y;
-        return (!((y = ((!m) ? nothing : m.lookup(0, h, k))), (nothing === y)));
+        var h = hash(k);
+        var y;
+        y = (!m) ? nothing : m.lookup(0, h, k);
+        return !(nothing === y);
     }));
     (modifyHash = (function (h, k, f, m) {
         var v;
-        return ((!m) ? ((v = f()), ((nothing === v) ? null : new(Leaf)(h, k, v))) : m.modify(0, f, h, k));
+        return (!m) ?
+            ((v = f()), ((nothing === v) ?
+                null :
+                new(Leaf)(h, k, v))) :
+            m.modify(0, f, h, k);
     }));
     (modify = (function (k, f, m) {
-        var h = hash(k),
-            v;
-        return ((!m) ? ((v = f()), ((nothing === v) ? null : new(Leaf)(h, k, v))) : m.modify(0, f, h, k));
+        var h = hash(k);
+        var v;
+        return
+            (!m) ?
+                ((v = f()), ((nothing === v) ?
+                    null :
+                    new(Leaf)(h, k, v))) :
+                m.modify(0, f, h, k);
     }));
     (setHash = (function (h, k, v, m) {
         var f = (function () {
             return v;
         });
-        return ((!m) ? ((nothing === v) ? null : new(Leaf)(h, k, v)) : m.modify(0, f, h, k));
+        return (!m) ?
+            ((nothing === v) ?
+                null :
+                new(Leaf)(h, k, v)) :
+            m.modify(0, f, h, k);
     }));
     (set = (function (k, v, m) {
         var h = hash(k),
             f = (function () {
                 return v;
             });
-        return ((!m) ? ((nothing === v) ? null : new(Leaf)(h, k, v)) : m.modify(0, f, h, k));
+        return ((!m) ?
+                ((nothing === v) ?
+                     null :
+                     new(Leaf)(h, k, v)) :
+                m.modify(0, f, h, k));
     }));
     var del = (function () {
         return nothing;

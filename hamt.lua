@@ -512,53 +512,78 @@ function M.tryGetHash(alt_fallback_value, hash, key, hamt)
     return value
   end
 end
+local tryGetHash
 
 -- Lookup a value using the internal hash.
 function M.tryGet(alt_fallback_value, key, hamt)
-  local h = hash(key)
-  local value
-  if hamt == nil then
-    value = nothing
-  else
-    value = hamt:lookup(0, h, key)
-  end
-  if value == nothing then
-    return alt_fallback_value
-  else
-    return value
-  end
+  return tryGetHash(alt_fallback_value, hash(key), key, hamt)
 end
+local tryGet = M.tryGet
 
 function M.getHash(hash, key, hamt)
-  local value
-  if hamt == nil then
-    value = nothing
-  else
-    value = hamt:lookup(0, hash, key)
-  end
-  if value == nothing then
-    return nil
-  else
-    return value
-  end
+  return tryGetHash(nil, hash, key, hamt)
 end
+local getHash = M.getHash
 
 function M.get(key, hamt)
-  local h = hash(key)
-  local value
-  if hamt == nil then
-    value = nothing
-  else
-    value = hamt:lookup(0, h, key)
-  end
-  if value == nothing then
-    return nil
-  else
-    return value
-  end
+  return tryGet(nil, key, hamt)
 end
 
 function M.hasHash(hash, key, hamt)
+  local value
+  if hamt == nil then
+    value = nothing
+  else
+    hamt:lookup(0, hash, key)
+  end
+  return value ~= nothing
+end
+local hasHash = M.hasHash
+
+function M.has(key, hamt)
+  return hasHash(hash(key), key, hamt)
+end
+
+function M.modifyHash(hash, key, fn, hamt)
+  if hamt == nil then
+    local value = fn()
+    if value == nothing then
+      return nil
+    else
+      return Leaf.new(hash, key, value)
+    end
+  else
+    return hamt:modify(0, fn, hash, key)
+  end
+end
+local modifyHash = M.modifyHash
+
+function M.modify(key, fn, hamt)
+  return modifyHash(hash(key), key, fn, hamt)
+end
+
+function M.setHash(hash, key, value, hamt)
+  local function fn()
+    return value
+  end
+  return modifyHash(hash, key, fn, hamt)
+end
+local setHash = M.setHash
+
+function M.set(key, value, hamt)
+  return setHash(hash(key), key, value, hamt)
+end
+
+local function del_fn()
+  return nothing
+end
+function M.removeHash(hash, key, hamt)
+  return modifyHash(hash, key, del_fn, hamt)
+end
+local removeHash = M.removeHash
+
+function M.remove(key, hamt)
+  return removeHash(hash(key), key, hamt)
 end
 
 return M
