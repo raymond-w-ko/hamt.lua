@@ -496,6 +496,10 @@ alter = function(node, shift, fn, hash, key)
   end
 end
 
+--------------------------------------------------------------------------------
+-- Queries
+--------------------------------------------------------------------------------
+
 -- Looup a value.
 --
 -- Returns the value stored for the given hash and key, or alt_fallback_value if none.
@@ -544,6 +548,10 @@ function M.has(key, hamt)
   return hasHash(hash(key), key, hamt)
 end
 
+--------------------------------------------------------------------------------
+-- Single Updates
+--------------------------------------------------------------------------------
+
 function M.modifyHash(hash, key, fn, hamt)
   if hamt == nil then
     local value = fn()
@@ -585,5 +593,28 @@ local removeHash = M.removeHash
 function M.remove(key, hamt)
   return removeHash(hash(key), key, hamt)
 end
+
+--------------------------------------------------------------------------------
+-- Fold
+--------------------------------------------------------------------------------
+
+function Leaf:fold(fn, starting_value)
+  return fn(starting_value, self)
+end
+
+local function reduce(array, fn, starting_value)
+  assert(false)
+end
+function Collision:fold(fn, starting_value)
+  return reduce(self.children, fn, starting_value)
+end
+
+function IndexedNode:fold(fn, starting_value)
+
+end
+
+--------------------------------------------------------------------------------
+-- Aggregate
+--------------------------------------------------------------------------------
 
 return M

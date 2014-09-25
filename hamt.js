@@ -323,13 +323,13 @@ define(["require", "exports"], (function (require, exports) {
         return f(z, self);
     }));
     (Collision.prototype.fold = (function (f, z) {
-        var __o = this,
-            children = __o["children"];
+        var self = this,
+            children = self["children"];
         return children.reduce(f, z);
     }));
     (IndexedNode.prototype.fold = (function (f, z) {
-        var __o = this,
-            children = __o["children"],
+        var self = this,
+            children = self["children"],
             z1 = z;
         for (var i = 0, len = children.length;
             (i < len);
@@ -340,8 +340,8 @@ define(["require", "exports"], (function (require, exports) {
         return z1;
     }));
     (ArrayNode.prototype.fold = (function (f, z) {
-        var __o = this,
-            children = __o["children"],
+        var self = this,
+            children = self["children"],
             z1 = z;
         for (var i = 0, len = children.length;
             (i < len);
