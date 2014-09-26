@@ -253,7 +253,7 @@ local function expand(frag, child, bit, subNodes)
   return ArrayNode.new(count + 1, arr)
 end
 
--- Given an array and an index created an IndexedNode with all the elements in
+-- Given an array and an index create an IndexedNode with all the elements in
 -- that array except that index. Also constructs a bitmap for the IndexedNode
 -- to mark which slots are filled in the "virtual array".
 --
