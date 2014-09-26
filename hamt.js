@@ -331,9 +331,7 @@ define(["require", "exports"], (function (require, exports) {
         var self = this,
             children = self["children"],
             z1 = z;
-        for (var i = 0, len = children.length;
-            (i < len);
-            (i = (i + 1))) {
+        for (var i = 0, len = children.length; (i < len); (i = (i + 1))) {
             var c = children[i];
             (z1 = ((c instanceof Leaf) ? f(z1, c) : c.fold(f, z1)));
         }
@@ -343,9 +341,7 @@ define(["require", "exports"], (function (require, exports) {
         var self = this,
             children = self["children"],
             z1 = z;
-        for (var i = 0, len = children.length;
-            (i < len);
-            (i = (i + 1))) {
+        for (var i = 0, len = children.length; (i < len); (i = (i + 1))) {
             var c = children[i];
             if (c) {
                 (z1 = ((c instanceof Leaf) ? f(z1, c) : c.fold(f, z1)));
