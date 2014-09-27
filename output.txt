@@ -1,442 +1,33 @@
-Collision.new()
-Collision:lookup() hash:53316143 key:19311703
+key: 85035710 -> hash: 29117953
+key: 27815778 -> hash: 164384257
+key: 14756006 -> hash: 29117953
+--------------------
+hash NOT matches
+Collision:lookup() hash:164384257 key:27815778
 __unnamed__ = {
-   [1] = {
-      ["hash"] = 53316143;
-      ["key"] = "19311703";
-      ["value"] = 0.79807432320119;
+   ["children"] = {
+      [1] = {
+         ["hash"] = 29117953;
+         ["key"] = "14756006";
+      };
+      [2] = {
+         ["hash"] = 29117953;
+         ["key"] = "85035710";
+      };
    };
-   [2] = {
-      ["hash"] = 53316143;
-      ["key"] = "84281";
-      ["value"] = 0.26414190572296;
-   };
+   ["hash"] = 29117953;
 };
 
-hash matches
-Collision.new()
-Collision:lookup() hash:194914172 key:27937147
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 194914172;
-      ["key"] = "27937147";
-      ["value"] = 0.17073722840656;
-   };
-   [2] = {
-      ["hash"] = 194914172;
-      ["key"] = "98216851";
-      ["value"] = 0.13556623275544;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:941742678 key:94237771
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 941742678;
-      ["key"] = "94237771";
-      ["value"] = 0.50352468450778;
-   };
-   [2] = {
-      ["hash"] = 941742678;
-      ["key"] = "23958067";
-      ["value"] = 0.59894365288805;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:194855459 key:27935218
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 194855459;
-      ["key"] = "27935218";
-      ["value"] = 0.41555450276316;
-   };
-   [2] = {
-      ["hash"] = 194855459;
-      ["key"] = "98214922";
-      ["value"] = 0.45253741147957;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-718753082 key:18721137
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -718753082;
-      ["key"] = "18721137";
-      ["value"] = 0.40976025722302;
-   };
-   [2] = {
-      ["hash"] = -718753082;
-      ["key"] = "89000841";
-      ["value"] = 0.57997969549303;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:167269209 key:98128991
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 167269209;
-      ["key"] = "98128991";
-      ["value"] = 0.7517370163465;
-   };
-   [2] = {
-      ["hash"] = 167269209;
-      ["key"] = "27849287";
-      ["value"] = 0.82144578275501;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:24687131 key:93127821
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 24687131;
-      ["key"] = "93127821";
-      ["value"] = 0.17660298230936;
-   };
-   [2] = {
-      ["hash"] = 24687131;
-      ["key"] = "22848117";
-      ["value"] = 0.27287262150553;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:143077832 key:27793147
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 143077832;
-      ["key"] = "27793147";
-      ["value"] = 0.3675801067436;
-   };
-   [2] = {
-      ["hash"] = 143077832;
-      ["key"] = "98072851";
-      ["value"] = 0.41753295803354;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-859272411 key:92162713
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -859272411;
-      ["key"] = "92162713";
-      ["value"] = 0.55196745911359;
-   };
-   [2] = {
-      ["hash"] = -859272411;
-      ["key"] = "21883009";
-      ["value"] = 0.9715750422571;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:1054683269 key:99125911
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 1054683269;
-      ["key"] = "99125911";
-      ["value"] = 0.028941797107348;
-   };
-   [2] = {
-      ["hash"] = 1054683269;
-      ["key"] = "28846207";
-      ["value"] = 0.61162788824512;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:167028837 key:27841049
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 167028837;
-      ["key"] = "27841049";
-      ["value"] = 0.37966041498085;
-   };
-   [2] = {
-      ["hash"] = 167028837;
-      ["key"] = "98120753";
-      ["value"] = 0.80051898796876;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1577442814 key:96242731
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1577442814;
-      ["key"] = "96242731";
-      ["value"] = 0.77589431079358;
-   };
-   [2] = {
-      ["hash"] = -1577442814;
-      ["key"] = "25963027";
-      ["value"] = 0.96182288902637;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:141261511 key:98053941
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 141261511;
-      ["key"] = "98053941";
-      ["value"] = 0.72837301911921;
-   };
-   [2] = {
-      ["hash"] = 141261511;
-      ["key"] = "27774237";
-      ["value"] = 0.37817844556043;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:88164834 key:14974159
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 88164834;
-      ["key"] = "14974159";
-      ["value"] = 0.80894071419009;
-   };
-   [2] = {
-      ["hash"] = 88164834;
-      ["key"] = "85253863";
-      ["value"] = 0.045881654423841;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:916651580 key:86036760
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 916651580;
-      ["key"] = "86036760";
-      ["value"] = 0.84318835563635;
-   };
-   [2] = {
-      ["hash"] = 916651580;
-      ["key"] = "15757056";
-      ["value"] = 0.39256099823344;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:29117953 key:14756006
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 29117953;
-      ["key"] = "14756006";
-      ["value"] = 0.5338639824411;
-   };
-   [2] = {
-      ["hash"] = 29117953;
-      ["key"] = "85035710";
-      ["value"] = 0.50151398184617;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:1689222210 key:11844219
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 1689222210;
-      ["key"] = "11844219";
-      ["value"] = 0.95739061253742;
-   };
-   [2] = {
-      ["hash"] = 1689222210;
-      ["key"] = "82123923";
-      ["value"] = 0.3635072469281;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1600627286 key:88063722
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1600627286;
-      ["key"] = "88063722";
-      ["value"] = 0.70066627753785;
-   };
-   [2] = {
-      ["hash"] = -1600627286;
-      ["key"] = "17784018";
-      ["value"] = 0.75814265003518;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:1716093689 key:11927216
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 1716093689;
-      ["key"] = "11927216";
-      ["value"] = 0.48318711917176;
-   };
-   [2] = {
-      ["hash"] = 1716093689;
-      ["key"] = "82206920";
-      ["value"] = 0.49368400052207;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1575444893 key:96267933
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1575444893;
-      ["key"] = "96267933";
-      ["value"] = 0.42436826329059;
-   };
-   [2] = {
-      ["hash"] = -1575444893;
-      ["key"] = "25988229";
-      ["value"] = 0.27335061432422;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1718204508 key:91260943
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1718204508;
-      ["key"] = "91260943";
-      ["value"] = 0.77261785672172;
-   };
-   [2] = {
-      ["hash"] = -1718204508;
-      ["key"] = "20981239";
-      ["value"] = 0.29190378923262;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:776811516 key:10785078
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 776811516;
-      ["key"] = "10785078";
-      ["value"] = 0.7911161740085;
-   };
-   [2] = {
-      ["hash"] = 776811516;
-      ["key"] = "81064782";
-      ["value"] = 0.33598440762533;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:59504867 key:14873037
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 59504867;
-      ["key"] = "14873037";
-      ["value"] = 0.22348160796147;
-   };
-   [2] = {
-      ["hash"] = 59504867;
-      ["key"] = "85152741";
-      ["value"] = 0.99607362078116;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1774360451 key:20797268
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1774360451;
-      ["key"] = "20797268";
-      ["value"] = 0.0067011998040627;
-   };
-   [2] = {
-      ["hash"] = -1774360451;
-      ["key"] = "91076972";
-      ["value"] = 0.21298159620922;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1578215488 key:96237922
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1578215488;
-      ["key"] = "96237922";
-      ["value"] = 0.53854836229226;
-   };
-   [2] = {
-      ["hash"] = -1578215488;
-      ["key"] = "25958218";
-      ["value"] = 0.24110585920612;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:-1546078913 key:88235850
-__unnamed__ = {
-   [1] = {
-      ["hash"] = -1546078913;
-      ["key"] = "88235850";
-      ["value"] = 0.39962516989431;
-   };
-   [2] = {
-      ["hash"] = -1546078913;
-      ["key"] = "17956146";
-      ["value"] = 0.030486263586405;
-   };
-};
-
-hash matches
-Collision.new()
-Collision:lookup() hash:1828353436 key:95228822
-__unnamed__ = {
-   [1] = {
-      ["hash"] = 1828353436;
-      ["key"] = "95228822";
-      ["value"] = 0.88023253844906;
-   };
-   [2] = {
-      ["hash"] = 1828353436;
-      ["key"] = "24949118";
-      ["value"] = 0.74955751793126;
-   };
-};
-
-hash matches
+arg hash: 164384257
+key: 27815778
+internal hash: 29117953
 
 ====== .\hamt.lua ======
-@@ 66 @@
-      | local function slow_count(t)
+@@ 29 @@
+      | local function slow_len(t)
       |   local count = 0
       |   for k, v in pairs(t) do
-   5% |     count = count + 1
+   6% |     count = count + 1
       |   end
       |   return count
       | end
@@ -444,7 +35,7 @@ hash matches
       | function M.arrayUpdate(index, new_value, array, max_bounds)
       |   -- pre allocate an array part with 32 slots. this seems to speed things up
       |   -- since the following copy phase doesn't need to trigger a re-hash
-  14% |   local copy = {
+  17% |   local copy = {
       |     nil, nil, nil, nil, nil, nil, nil, nil,
       |     nil, nil, nil, nil, nil, nil, nil, nil,
       |     nil, nil, nil, nil, nil, nil, nil, nil,
@@ -452,26 +43,60 @@ hash matches
       |   -- always work properly on an array with holes like in Javascript
       |   --for i = 1, #array do
       |   --for i = 1, max_bounds do
-  11% |   for i = 1, 64 do
-  14% |     copy[i] = array[i]
+   3% |   for i = 1, max_bounds do
+      |     copy[i] = array[i]
       |   end
       |   copy[index + 1] = new_value
+@@ 141 @@
+      |   index = index + 1
       | 
-@@ 241 @@
-      | local ArrayNodeMetatable = {__index = ArrayNode}
+      |   local copy = {}
+   4% |   local i = 1
+      |   local j = 1
+      |   while true do
+      |     local item = array[i]
+@@ 243 @@
+      | local IndexedNodeMetatable = {__index = IndexedNode}
       | 
-      | function ArrayNode.new(count, children)
-  11% |   return setmetatable({count = count, children = children}, ArrayNodeMetatable)
+      | function IndexedNode.new(mask, children)
+   3% |   return setmetatable({mask = mask, children = children}, IndexedNodeMetatable)
       | end
       | 
       | --------------------------------------------------------------------------------
+@@ 258 @@
+      | local ArrayNodeMetatable = {__index = ArrayNode}
+      | 
+      | function ArrayNode.new(count, children)
+  18% |   return setmetatable({count = count, children = children}, ArrayNodeMetatable)
+      | end
+      | 
+      | --------------------------------------------------------------------------------
+@@ 477 @@
+      |   if node == nil then
+      |     return nothing
+      |   else
+   3% |     return node:lookup(shift, hash, key)
+      |   end
+      | end
+      | 
+@@ 575 @@
+      |   local frag = band(rshift(hash, shift), MASK)
+      |   local child = children[frag + 1] -- NOTICE: 0 index to 1 index
+      |   local newChild = alter(child, shift + SIZE, fn, hash, key)
+   3% |   if child == nil and newChild ~= nil then
+      |     return ArrayNode.new(count + 1, arrayUpdate(frag, newChild, children, BUCKET_SIZE))
+      |   elseif child ~= nil and newChild == nil then
+      |     if (count - 1) <= MIN_ARRAY_NODE then
 
 ====== correctness_tests.lua ======
-@@ 10 @@
+@@ 11 @@
       | for i = 1, bounds do
       |   local key
       |   for try = 1, 64 do
-  10% |     key = tostring(math.random(1, 100000000))
+  13% |     key = tostring(math.random(1, 100000000))
       |     if existing_keys[key] == nil then
       |       existing_keys[key] = true
-      |       break
+   3% |       break
+      |     else
+      |       key = nil
+      |     end

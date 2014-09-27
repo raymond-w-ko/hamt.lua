@@ -26,6 +26,14 @@ else
   assert(false)
 end
 
+local function slow_len(t)
+  local count = 0
+  for k, v in pairs(t) do
+    count = count + 1
+  end
+  return count
+end
+
 --------------------------------------------------------------------------------
 -- Configuration
 --------------------------------------------------------------------------------
@@ -52,7 +60,7 @@ end
 local popcount = M.popcount
 
 local function hashFragment(shift, h)
-  return band(rshift(h), MASK)
+  return band(rshift(h, shift), MASK)
 end
 
 local function toBitmap(n)
@@ -61,14 +69,6 @@ end
 
 local function fromBitmap(bitmap, bit)
   return popcount(band(bitmap, bit - 1))
-end
-
-local function slow_count(t)
-  local count = 0
-  for k, v in pairs(t) do
-    count = count + 1
-  end
-  return count
 end
 
 --------------------------------------------------------------------------------
@@ -96,8 +96,8 @@ function M.arrayUpdate(index, new_value, array, max_bounds)
   end
   copy[index + 1] = new_value
 
-  local len1 = slow_count(copy)
-  local len2 = slow_count(array)
+  local len1 = slow_len(copy)
+  local len2 = slow_len(array)
   assert(
     (len1 == len2
      or (new_value ~= nil and (len1 == (len2 + 1)))
@@ -108,6 +108,9 @@ end
 local arrayUpdate = M.arrayUpdate
 
 function M.arraySpliceOut(index, array)
+  assert(index >= 0)
+  assert(index <= slow_len(array))
+
   index = index + 1
 
   local copy = {}
@@ -126,12 +129,15 @@ function M.arraySpliceOut(index, array)
 
     i = i + 1
   end
-  assert(slow_count(copy) == (slow_count(array) - 1))
+  assert(slow_len(copy) == (slow_len(array) - 1))
   return copy
 end
 local arraySpliceOut = M.arraySpliceOut
 
 function M.arraySpliceIn(index, new_value, array)
+  assert(index >= 0)
+  assert(index <= slow_len(array))
+
   index = index + 1
 
   local copy = {}
@@ -154,9 +160,17 @@ function M.arraySpliceIn(index, new_value, array)
   end
   if i == index then
     copy[j] = new_value
-    j = j + 1 
+    --j = j + 1 
   end
-  assert(slow_count(copy) == (slow_count(array) + 1))
+
+  assert(slow_len(copy) == (slow_len(array) + 1))
+  --if index > #array then
+    --print(table.show(array))
+    --print(table.show(index))
+    --print(table.show(new_value))
+    --print(table.show(copy))
+    --assert(false)
+  --end
   return copy
 end
 local arraySpliceIn = M.arraySpliceIn
@@ -175,59 +189,56 @@ end
 local hash = M.hash
 --------------------------------------------------------------------------------
 
+-- empty node
 M.empty = nil
 
+-- nothing value
 local nothing = {}
 
+--------------------------------------------------------------------------------
+
+-- 
+-- Leaf holding a value.
+-- 
+-- @member hash Hash of key.
+-- @member key Key.
+-- @member value Value stored.
+-- 
 local Leaf = {}
 local LeafMetatable = {__index = Leaf}
 
 function Leaf.new(hash, key, value)
-  return setmetatable({ hash = hash, key = key, value = value } , LeafMetatable)
-end
-
-function Leaf:lookup(_dummy1, _dummy2, key)
-  if self.key == key then
-    return self.value
-  else
-    return nothing
-  end
-end
-
-function Leaf:modify(shift, fn, hash, key)
-  if self.key == key then
-    local v = fn(self.value) 
-    if v == nothing then
-      return nil
-    else
-      return Leaf.new(hash, key, v)
-    end
-  else
-    local v = fn()
-    if v == nothing then
-      return self
-    else
-      return mergeLeaves(shift, self, Leaf.new(hash, key, v))
-    end
-  end
-end
-
-function Leaf:fold(fn, z)
-  return fn(z, self)
+  return setmetatable({hash = hash, key = key, value = value} , LeafMetatable)
 end
 
 --------------------------------------------------------------------------------
 
+-- 
+-- Leaf holding multiple values with the same hash but different keys.
+-- 
+-- @member hash Hash of key.
+-- @member children Array of collision children node.
+-- 
 local Collision = {}
 local CollisionMetatable = {__index = Collision}
 
 function Collision.new(hash, children)
-  print('Collision.new()')
+  for k, v in pairs(children) do
+    assert(v.hash == hash)
+  end
   return setmetatable({hash = hash, children = children}, CollisionMetatable)
 end
 
 --------------------------------------------------------------------------------
 
+-- 
+-- Internal node with a sparse set of children.
+-- 
+-- Uses a bitmap and array to pack children.
+-- 
+-- @member mask Bitmap that encode the positions of children in the array.
+-- @member children Array of child nodes.
+-- 
 local IndexedNode = {}
 local IndexedNodeMetatable = {__index = IndexedNode}
 
@@ -237,6 +248,12 @@ end
 
 --------------------------------------------------------------------------------
 
+-- 
+-- Internal node with many children.
+-- 
+-- @member count Number of children.
+-- @member children Array of child nodes.
+-- 
 local ArrayNode = {}
 local ArrayNodeMetatable = {__index = ArrayNode}
 
@@ -246,7 +263,11 @@ end
 
 --------------------------------------------------------------------------------
 
+-- 
+-- Is `node` a leaf node?
+-- 
 local function isLeaf(node)
+  --if node == M.empty then
   if node == nil then
     return true
   end
@@ -259,6 +280,14 @@ local function isLeaf(node)
   return false
 end
 
+-- 
+-- Expand an indexed node into an array node.
+-- 
+-- @param frag Index of added child.
+-- @param child Added child.
+-- @param bitmap Decoding bitmap of where children are located in sparse array subNodes
+-- @param subNodes Index node children before child added.
+-- 
 -- Does the inverse of the function below, given a "packed" array and a decoding bitmap
 -- return a full size array with holes.
 --
@@ -279,9 +308,13 @@ local function expand(frag, child, bit, subNodes)
   end
 
   arr[frag + 1] = child -- NOTICE: 0 index to 1 index
+  assert(slow_len(arr) == slow_len(subNodes) + 1)
   return ArrayNode.new(count + 1, arr)
 end
 
+-- 
+-- Collapse an array node into a indexed node.
+-- 
 -- Given an array and an index create an IndexedNode with all the elements in
 -- that array except that index. Also constructs a bitmap for the IndexedNode
 -- to mark which slots are filled in the "virtual array".
@@ -291,16 +324,16 @@ end
 -- {1, 2, 8} and a decoding bitmap of 0b10000011 to save space
 local function pack(removed_index, elements)
   local children = {}
-  local next_children_index = 1
+  local next_slot = 1
   local bitmap = 0
   
   local i = 0
   while i < BUCKET_SIZE do
     local elem = elements[i + 1] -- NOTICE: 0 index to 1 index
-    if i ~= removed_index and elem then
+    if i ~= removed_index and elem ~= nil then
       -- table.insert(children, elem)
-      children[next_children_index] = elem
-      next_children_index = next_children_index + 1
+      children[next_slot] = elem
+      next_slot = next_slot + 1
 
       bitmap = bor(bitmap, lshift(1, i))
     end
@@ -308,9 +341,18 @@ local function pack(removed_index, elements)
     i = i + 1
   end
 
+  assert(slow_len(elements) == slow_len(children) - 1)
+
   return IndexedNode.new(bitmap, children)
 end
 
+-- 
+-- Merge two leaf nodes.
+-- 
+-- @param shift Current shift.
+-- @param node1 Node.
+-- @param node2 Node.
+-- 
 local function mergeLeaves(shift, node1, node2)
   local hash1 = node1.hash
   local hash2 = node2.hash
@@ -318,11 +360,11 @@ local function mergeLeaves(shift, node1, node2)
   if hash1 == hash2 then
     return Collision.new(hash1, {node2, node1})
   else
-    -- hash fragment
+    -- inline hashFragment(shift, hash1)
     local subhash1 = band(rshift(hash1, shift), MASK)
-    -- hash fragment
+    -- inline hashFragment(shift, hash2)
     local subhash2 = band(rshift(hash2, shift), MASK)
-    -- toBitmap | toBitmap
+    -- toBitmap(subhash1) | toBitmap(subhash2)
     local bitmap = bor(lshift(1, subhash1), lshift(1, subhash2))
 
     local children
@@ -340,16 +382,25 @@ local function mergeLeaves(shift, node1, node2)
   end
 end
 
+-- 
+-- Update an entry in a collision list.
+-- 
+-- @param hash Hash of collision list.
+-- @param list Collision list.
+-- @param update_fn Update function.
+-- @param key Key to update.
+-- 
 local function updateCollisionList(hash, list, update_fn, key)
-  print('updateCollisionList()')
+  assert(M.hash(key) == hash)
   local target
   local i = 0
 
   local len = #list
+  assert(slow_len(list) == len)
   while i < len do
     local child = list[i + 1] -- NOTICE: 0 index to 1 index
     if child.key == key then
-      target = key
+      target = child
       break
     end
 
@@ -381,10 +432,7 @@ function Leaf:lookup(_1, _2, key)
 end
 
 function Collision:lookup(_, hash, key)
-  print('Collision:lookup() hash:'..tostring(hash)..' key:'..tostring(key))
-  print(table.show(self.children))
   if hash == self.hash then
-    print('hash matches')
     local children = self.children
     local i = 0
     local len = #children
@@ -397,12 +445,15 @@ function Collision:lookup(_, hash, key)
       i = i + 1
     end
   end
+  print('--------------------')
   print('hash NOT matches')
+  print('Collision:lookup() hash:'..tostring(hash)..' key:'..tostring(key))
   print(table.show(self))
   return nothing
 end
 
 function IndexedNode:lookup(shift, hash, key)
+  -- hashFragment(shift, hash)
   local frag = band(rshift(hash, shift), MASK)
   local bit = lshift(1, frag)
   local mask = self.mask
@@ -416,6 +467,7 @@ function IndexedNode:lookup(shift, hash, key)
 end
 
 function ArrayNode:lookup(shift, hash, key)
+  -- hashFragment(shift, hash)
   local frag = band(rshift(hash, shift), MASK)
   local child = self.children[frag + 1] -- NOTICE: 0 index to 1 index
   return lookup(child, shift + SIZE, hash, key)
@@ -450,7 +502,13 @@ function Leaf:modify(shift, fn, hash, key)
 end
 
 function Collision:modify(shift, fn, hash, key)
-  assert(self.hash == hash)
+  if (self.hash ~= hash) then
+    print('arg hash: '..hash)
+    print('key: '..key)
+    print('internal hash: '..self.hash)
+    assert(false)
+  end
+  print('good to collide')
   local list = updateCollisionList(self.hash, self.children, fn, key)
   if #list > 1 then
     return Collision.new(self.hash, list)
@@ -461,6 +519,7 @@ function Collision:modify(shift, fn, hash, key)
 end
 
 function IndexedNode:modify(shift, fn, hash, key)
+  assert(shift <= 32)
   local mask = self.mask
   local children = self.children
   local frag = band(rshift(hash, shift), MASK)
@@ -492,14 +551,14 @@ function IndexedNode:modify(shift, fn, hash, key)
     return nil
   elseif removed then
     local node = children[bxor(index, 1) + 1] -- NOTICE: 0 index to 1 index
-    assert(slow_count(children) == #children)
+    assert(slow_len(children) == #children)
     if #children <= 2 and isLeaf(node) then
       return node
     else
       return IndexedNode.new(bitmap, arraySpliceOut(index, children))
     end
   elseif added then
-    assert(slow_count(children) == #children)
+    assert(slow_len(children) == #children)
     if #children >= MAX_INDEX_NODE then
       return expand(frag, child, mask, children)
     else
@@ -659,7 +718,7 @@ function IndexedNode:fold(fn, starting_value)
   local children = self.children
   local folded_value = starting_value
   -- this assumption_below does not hold sometimes!!!
-  assert(slow_count(children) == #children)
+  assert(slow_len(children) == #children)
   -- thus this can't be used!!!
   --for i = 1, #children do
   for i = 1, MAX_INDEX_NODE do
@@ -679,7 +738,7 @@ function ArrayNode:fold(fn, starting_value)
   local children = self.children
   local folded_value = starting_value
   -- this assumption_below does not hold sometimes!!!
-  --assert(slow_count(children) == #children)
+  --assert(slow_len(children) == #children)
   -- thus this can't be used!!!
   --for i = 1, #children do
   for i = 1, BUCKET_SIZE do
