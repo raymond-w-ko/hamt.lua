@@ -501,20 +501,23 @@ function Leaf:modify(shift, fn, hash, key)
   end
 end
 
-function Collision:modify(shift, fn, hash, key)
-  if (self.hash ~= hash) then
-    print('arg hash: '..hash)
-    print('key: '..key)
-    print('internal hash: '..self.hash)
-    assert(false)
-  end
-  print('good to collide')
-  local list = updateCollisionList(self.hash, self.children, fn, key)
-  if #list > 1 then
-    return Collision.new(self.hash, list)
+function Collision:modify(shift, fn, key_hash, key)
+  local node_hash = self.hash
+  if (key_hash == node_hash) then
+    local list = updateCollisionList(node_hash, self.children, fn, key)
+    if #list > 1 then
+      return Collision.new(node_hash, list)
+    else
+      -- there is no longer a collision, so return the single internal Leaf
+      return list[1] -- NOTICE: 0 index to 1 index
+    end
   else
-    -- there is no longer a collision, so return any internal Leafs
-    return list[1] -- NOTICE: 0 index to 1 index
+    local value = fn()
+    if value == nothing then
+      return self
+    else
+      return mergeLeaves(shift, self, Leaf.new(key_hash, key, value))
+    end
   end
 end
 
