@@ -174,12 +174,21 @@ define(["require", "exports"], (function (require, exports) {
         }
     }));
     (Collision.prototype.modify = (function (shift, f, h, k) {
-        var self = this,
-            list = updateCollisionList(self.hash, self.children, f, k);
-        if (list.length > 1) {
-            return new(Collision)(self.hash, list)
+        var self = this;
+        var hash0 = self["hash"],
+        if (h === hash0) {
+            var children = self["children"];
+            var list;
+            list = updateCollisionList(hash0, children, f, k);
+            return (list.length > 1) ?
+                new(Collision)(hash0, list) :
+                list[0];
         } else {
-            return list[0];
+            var v;
+            v = f();
+            return (nothing === v) ?
+                self :
+                mergeLeaves(shift, self, new(Leaf)(h, k, v));
         }
     }));
     (IndexedNode.prototype.modify = (function (shift, f, h, k) {
