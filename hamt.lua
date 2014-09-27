@@ -103,7 +103,6 @@ end
 local arraySpliceOut = M.arraySpliceOut
 
 function M.arraySpliceIn(index, new_value, array)
-  print(index)
   index = index + 1
 
   local copy = {}
@@ -234,7 +233,6 @@ end
 --
 --local function expand(frag, child, bitmap, subNodes)
 local function expand(frag, child, bit, subNodes)
-  print('expand()')
   local arr = {}
   local count = 0
 
@@ -261,7 +259,6 @@ end
 -- IndexedNode would actually contain
 -- {1, 2, 8} and a decoding bitmap of 0b10000011 to save space
 local function pack(removed_index, elements)
-  print('pack()')
   local children = {}
   local next_children_index = 1
   local bitmap = 0
@@ -285,16 +282,10 @@ local function pack(removed_index, elements)
 end
 
 local function mergeLeaves(shift, node1, node2)
-  print('mergeLeaves')
-  print('shift:'..tostring(shift))
-  print('merging')
-  print(table.show(node1))
-  print(table.show(node2))
   local hash1 = node1.hash
   local hash2 = node2.hash
 
   if hash1 == hash2 then
-    print('Collision.new!')
     return Collision.new(hash1, {node2, node1})
   else
     -- hash fragment
@@ -306,8 +297,6 @@ local function mergeLeaves(shift, node1, node2)
 
     local children
     if subhash1 == subhash2 then
-      print('same subhash')
-      print('subhash:'..tostring(subhash1)..','..tostring(subhash2))
       children = {mergeLeaves(shift + SIZE, node1, node2)}
     else
       if subhash1 < subhash2 then
@@ -317,7 +306,6 @@ local function mergeLeaves(shift, node1, node2)
       end
     end
 
-    print('IndexedNode.new!')
     return IndexedNode.new(bitmap, children)
   end
 end
@@ -379,7 +367,6 @@ function Collision:lookup(_, hash, key)
 end
 
 function IndexedNode:lookup(shift, hash, key)
-  print('IndexedNode:lookup')
   local frag = band(rshift(hash, shift), MASK)
   local bit = lshift(1, frag)
   local mask = self.mask
@@ -409,7 +396,6 @@ end
 local alter
 
 function Leaf:modify(shift, fn, hash, key)
-  print('Leaf:modify')
   if self.key == key then
     local value = fn(self.value)
     if value == nothing then
@@ -428,7 +414,6 @@ function Leaf:modify(shift, fn, hash, key)
 end
 
 function Collision:modify(shift, fn, hash, key)
-  print('Collision:modify')
   local list = updateCollisionList(self.hash, self.children, fn, key)
   if #list > 1 then
     return Collision.new(self.hash, list)
@@ -438,13 +423,11 @@ function Collision:modify(shift, fn, hash, key)
 end
 
 function IndexedNode:modify(shift, fn, hash, key)
-  print('IndexedNode:modify')
   local mask = self.mask
   local children = self.children
   local frag = band(rshift(hash, shift), MASK)
   local bit = lshift(1, frag)
   local index = popcount(band(mask, bit - 1))
-  print('index: '..index)
   local exists = band(mask, bit) ~= 0
 
   local node
@@ -457,8 +440,6 @@ function IndexedNode:modify(shift, fn, hash, key)
 
   local removed = exists and (child == nil)
   local added = (not exists) and (child ~= nil)
-  print('removed:'..tostring(removed))
-  print('added:'..tostring(added))
 
   local bitmap
   if removed then
@@ -480,44 +461,35 @@ function IndexedNode:modify(shift, fn, hash, key)
     end
   elseif added then
     if #children >= MAX_INDEX_NODE then
-      print('converting IndexedNode to ArrayNode via expand()')
       return expand(frag, child, mask, children)
     else
-      print('splicing in IndexedNode with new value')
       return IndexedNode.new(bitmap, arraySpliceIn(index, child, children))
     end
   else
-      print('updating IndexedNode with new value')
     return IndexedNode.new(bitmap, arrayUpdate(index, child, children))
   end
 end
 
 function ArrayNode:modify(shift, fn, hash, key)
-  print('ArrayNode:modify()')
   local count = self.count
   local children = self.children
   local frag = band(rshift(hash, shift), MASK)
   local child = children[frag + 1] -- NOTICE: 0 index to 1 index
   local newChild = alter(child, shift + SIZE, fn, hash, key)
   if child == nil and newChild ~= nil then
-    print('add newChild, oldChild nil ArrayNodeNode with arrayUpdate()')
     return ArrayNode.new(count + 1, arrayUpdate(frag, newChild, children))
   elseif child ~= nil and newChild == nil then
     if (count - 1) <= MIN_ARRAY_NODE then
-      print('updating ArrayNodeNode pack()')
       return pack(frag, children)
     else
-      print('remove child ArrayNodeNode with arrayUpdate()')
       return ArrayNode.new(count - 1, arrayUpdate(frag, nil, children))
     end
   else
-    print('add new child with arrayUpdate()')
     return ArrayNode.new(count, arrayUpdate(frag, newChild, children))
   end
 end
 
 alter = function(node, shift, fn, hash, key)
-  print('alter()')
   if node == nil then
     local value = fn()
     if value == nothing then
@@ -605,7 +577,6 @@ function M.modify(key, fn, hamt)
 end
 
 function M.setHash(hash, key, value, hamt)
-  print('hash: '..hash)
   local function fn()
     return value
   end
