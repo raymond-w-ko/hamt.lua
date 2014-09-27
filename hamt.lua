@@ -63,18 +63,46 @@ local function fromBitmap(bitmap, bit)
   return popcount(band(bitmap, bit - 1))
 end
 
+local function slow_count(t)
+  local count = 0
+  for k, v in pairs(t) do
+    count = count + 1
+  end
+  return count
+end
+
 --------------------------------------------------------------------------------
 -- Array Ops
 --
 -- These functions' arguments are 0 index based, meaning 0 is the first element
 -- of the array, but still produce Lua array that are 1 based
 --------------------------------------------------------------------------------
-function M.arrayUpdate(index, new_value, array)
-  local copy = {}
-  for i = 1, #array do
+function M.arrayUpdate(index, new_value, array, max_bounds)
+  -- pre allocate an array part with 32 slots. this seems to speed things up
+  -- since the following copy phase doesn't need to trigger a re-hash
+  local copy = {
+    nil, nil, nil, nil, nil, nil, nil, nil,
+    nil, nil, nil, nil, nil, nil, nil, nil,
+    nil, nil, nil, nil, nil, nil, nil, nil,
+    nil, nil, nil, nil, nil, nil, nil, nil,
+  }
+
+  -- how unfortunate it can't be the below since the '#" operator doesn't
+  -- always work properly on an array with holes like in Javascript
+  --for i = 1, #array do
+  --for i = 1, max_bounds do
+  for i = 1, max_bounds do
     copy[i] = array[i]
   end
-  copy[index + 1] = new_value;
+  copy[index + 1] = new_value
+
+  local len1 = slow_count(copy)
+  local len2 = slow_count(array)
+  assert(
+    (len1 == len2
+     or (new_value ~= nil and (len1 == (len2 + 1)))
+     or (new_value == nil and (len1 == (len2 - 1)))
+    ))
   return copy
 end
 local arrayUpdate = M.arrayUpdate
@@ -98,6 +126,7 @@ function M.arraySpliceOut(index, array)
 
     i = i + 1
   end
+  assert(slow_count(copy) == (slow_count(array) - 1))
   return copy
 end
 local arraySpliceOut = M.arraySpliceOut
@@ -127,6 +156,7 @@ function M.arraySpliceIn(index, new_value, array)
     copy[j] = new_value
     j = j + 1 
   end
+  assert(slow_count(copy) == (slow_count(array) + 1))
   return copy
 end
 local arraySpliceIn = M.arraySpliceIn
@@ -192,6 +222,7 @@ local Collision = {}
 local CollisionMetatable = {__index = Collision}
 
 function Collision.new(hash, children)
+  print('Collision.new()')
   return setmetatable({hash = hash, children = children}, CollisionMetatable)
 end
 
@@ -264,8 +295,7 @@ local function pack(removed_index, elements)
   local bitmap = 0
   
   local i = 0
-  local len = #elements
-  while i < len do
+  while i < BUCKET_SIZE do
     local elem = elements[i + 1] -- NOTICE: 0 index to 1 index
     if i ~= removed_index and elem then
       -- table.insert(children, elem)
@@ -311,6 +341,7 @@ local function mergeLeaves(shift, node1, node2)
 end
 
 local function updateCollisionList(hash, list, update_fn, key)
+  print('updateCollisionList()')
   local target
   local i = 0
 
@@ -335,7 +366,7 @@ local function updateCollisionList(hash, list, update_fn, key)
   if value == nothing then
     return arraySpliceOut(i, list)
   else
-    return arrayUpdate(i, Leaf.new(hash, key, value), list)
+    return arrayUpdate(i, Leaf.new(hash, key, value), list, len + 1)
   end
 end
 
@@ -350,7 +381,10 @@ function Leaf:lookup(_1, _2, key)
 end
 
 function Collision:lookup(_, hash, key)
+  print('Collision:lookup() hash:'..tostring(hash)..' key:'..tostring(key))
+  print(table.show(self.children))
   if hash == self.hash then
+    print('hash matches')
     local children = self.children
     local i = 0
     local len = #children
@@ -363,6 +397,8 @@ function Collision:lookup(_, hash, key)
       i = i + 1
     end
   end
+  print('hash NOT matches')
+  print(table.show(self))
   return nothing
 end
 
@@ -414,10 +450,12 @@ function Leaf:modify(shift, fn, hash, key)
 end
 
 function Collision:modify(shift, fn, hash, key)
+  assert(self.hash == hash)
   local list = updateCollisionList(self.hash, self.children, fn, key)
   if #list > 1 then
     return Collision.new(self.hash, list)
   else
+    -- there is no longer a collision, so return any internal Leafs
     return list[1] -- NOTICE: 0 index to 1 index
   end
 end
@@ -454,19 +492,21 @@ function IndexedNode:modify(shift, fn, hash, key)
     return nil
   elseif removed then
     local node = children[bxor(index, 1) + 1] -- NOTICE: 0 index to 1 index
+    assert(slow_count(children) == #children)
     if #children <= 2 and isLeaf(node) then
       return node
     else
       return IndexedNode.new(bitmap, arraySpliceOut(index, children))
     end
   elseif added then
+    assert(slow_count(children) == #children)
     if #children >= MAX_INDEX_NODE then
       return expand(frag, child, mask, children)
     else
       return IndexedNode.new(bitmap, arraySpliceIn(index, child, children))
     end
   else
-    return IndexedNode.new(bitmap, arrayUpdate(index, child, children))
+    return IndexedNode.new(bitmap, arrayUpdate(index, child, children, MAX_INDEX_NODE))
   end
 end
 
@@ -477,15 +517,15 @@ function ArrayNode:modify(shift, fn, hash, key)
   local child = children[frag + 1] -- NOTICE: 0 index to 1 index
   local newChild = alter(child, shift + SIZE, fn, hash, key)
   if child == nil and newChild ~= nil then
-    return ArrayNode.new(count + 1, arrayUpdate(frag, newChild, children))
+    return ArrayNode.new(count + 1, arrayUpdate(frag, newChild, children, BUCKET_SIZE))
   elseif child ~= nil and newChild == nil then
     if (count - 1) <= MIN_ARRAY_NODE then
       return pack(frag, children)
     else
-      return ArrayNode.new(count - 1, arrayUpdate(frag, nil, children))
+      return ArrayNode.new(count - 1, arrayUpdate(frag, nil, children, BUCKET_SIZE))
     end
   else
-    return ArrayNode.new(count, arrayUpdate(frag, newChild, children))
+    return ArrayNode.new(count, arrayUpdate(frag, newChild, children, BUCKET_SIZE))
   end
 end
 
@@ -522,7 +562,7 @@ function M.tryGetHash(alt_fallback_value, hash, key, hamt)
     return value
   end
 end
-local tryGetHash
+local tryGetHash = M.tryGetHash
 
 -- Lookup a value using the internal hash.
 function M.tryGet(alt_fallback_value, key, hamt)
@@ -618,12 +658,18 @@ end
 function IndexedNode:fold(fn, starting_value)
   local children = self.children
   local folded_value = starting_value
-  for i = 1, #children do
+  -- this assumption_below does not hold sometimes!!!
+  assert(slow_count(children) == #children)
+  -- thus this can't be used!!!
+  --for i = 1, #children do
+  for i = 1, MAX_INDEX_NODE do
     local child = children[i] -- normally 0 index to 1 index, but just iterating over
-    if getmetatable(child) == LeafMetatable then
-      folded_value = fn(folded_value, child)
-    else
-      folded_value = child:fold(fn, folded_value)
+    if child then
+      if getmetatable(child) == LeafMetatable then
+        folded_value = fn(folded_value, child)
+      else
+        folded_value = child:fold(fn, folded_value)
+      end
     end
   end
   return folded_value
@@ -632,7 +678,11 @@ end
 function ArrayNode:fold(fn, starting_value)
   local children = self.children
   local folded_value = starting_value
-  for i = 1, #children do
+  -- this assumption_below does not hold sometimes!!!
+  --assert(slow_count(children) == #children)
+  -- thus this can't be used!!!
+  --for i = 1, #children do
+  for i = 1, BUCKET_SIZE do
     local child = children[i] -- normally 0 index to 1 index, but just iterating over
     if child then
       if getmetatable(child) == LeafMetatable then
