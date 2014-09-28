@@ -80,6 +80,7 @@ end
 function M.arrayUpdate(index, new_value, array, max_bounds)
   -- pre allocate an array part with 32 slots. this seems to speed things up
   -- since the following copy phase doesn't need to trigger a re-hash
+  -- TODO: this might use way too much memory
   local copy = {
     nil, nil, nil, nil, nil, nil, nil, nil,
     nil, nil, nil, nil, nil, nil, nil, nil,
@@ -96,20 +97,22 @@ function M.arrayUpdate(index, new_value, array, max_bounds)
   end
   copy[index + 1] = new_value
 
-  local len1 = slow_len(copy)
-  local len2 = slow_len(array)
-  assert(
-    (len1 == len2
-     or (new_value ~= nil and (len1 == (len2 + 1)))
-     or (new_value == nil and (len1 == (len2 - 1)))
-    ))
+  --local len1 = slow_len(copy)
+  --local len2 = slow_len(array)
+  --assert(
+    --(len1 == len2
+     --or (new_value ~= nil and (len1 == (len2 + 1)))
+     --or (new_value == nil and (len1 == (len2 - 1)))
+    --))
   return copy
 end
 local arrayUpdate = M.arrayUpdate
 
 function M.arraySpliceOut(index, array)
-  assert(index >= 0)
-  assert(index <= slow_len(array))
+  -- these assumptions always seem to hold so bounds fixing like the JavaScript
+  -- version does not appear to be necessary
+  --assert(index >= 0)
+  --assert(index <= slow_len(array))
 
   index = index + 1
 
@@ -129,14 +132,16 @@ function M.arraySpliceOut(index, array)
 
     i = i + 1
   end
-  assert(slow_len(copy) == (slow_len(array) - 1))
+  --assert(slow_len(copy) == (slow_len(array) - 1))
   return copy
 end
 local arraySpliceOut = M.arraySpliceOut
 
 function M.arraySpliceIn(index, new_value, array)
-  assert(index >= 0)
-  assert(index <= slow_len(array))
+  -- these assumptions always seem to hold so bounds fixing like the JavaScript
+  -- version does not appear to be necessary
+  --assert(index >= 0)
+  --assert(index <= slow_len(array))
 
   index = index + 1
 
@@ -163,14 +168,7 @@ function M.arraySpliceIn(index, new_value, array)
     --j = j + 1 
   end
 
-  assert(slow_len(copy) == (slow_len(array) + 1))
-  --if index > #array then
-    --print(table.show(array))
-    --print(table.show(index))
-    --print(table.show(new_value))
-    --print(table.show(copy))
-    --assert(false)
-  --end
+  --assert(slow_len(copy) == (slow_len(array) + 1))
   return copy
 end
 local arraySpliceIn = M.arraySpliceIn
@@ -223,9 +221,9 @@ local Collision = {}
 local CollisionMetatable = {__index = Collision}
 
 function Collision.new(hash, children)
-  for k, v in pairs(children) do
-    assert(v.hash == hash)
-  end
+  --for k, v in pairs(children) do
+    --assert(v.hash == hash)
+  --end
   return setmetatable({hash = hash, children = children}, CollisionMetatable)
 end
 
@@ -308,7 +306,7 @@ local function expand(frag, child, bit, subNodes)
   end
 
   arr[frag + 1] = child -- NOTICE: 0 index to 1 index
-  assert(slow_len(arr) == slow_len(subNodes) + 1)
+  --assert(slow_len(arr) == slow_len(subNodes) + 1)
   return ArrayNode.new(count + 1, arr)
 end
 
@@ -341,7 +339,12 @@ local function pack(removed_index, elements)
     i = i + 1
   end
 
-  assert(slow_len(elements) == slow_len(children) - 1)
+  --if (slow_len(elements) - 1 ~= (slow_len(children))) then
+    --print('removed_index: '..tostring(removed_index))
+    --print(table.show(elements, 'elements'))
+    --print(table.show(children, 'children'))
+    --assert(false)
+  --end
 
   return IndexedNode.new(bitmap, children)
 end
@@ -391,12 +394,14 @@ end
 -- @param key Key to update.
 -- 
 local function updateCollisionList(hash, list, update_fn, key)
-  assert(M.hash(key) == hash)
+  -- this should most definitely hold
+  --assert(M.hash(key) == hash)
   local target
   local i = 0
 
   local len = #list
-  assert(slow_len(list) == len)
+  -- a Collision is just an array of Leaf, so the below should hold
+  --assert(slow_len(list) == len)
   while i < len do
     local child = list[i + 1] -- NOTICE: 0 index to 1 index
     if child.key == key then
@@ -445,10 +450,6 @@ function Collision:lookup(_, hash, key)
       i = i + 1
     end
   end
-  print('--------------------')
-  print('hash NOT matches')
-  print('Collision:lookup() hash:'..tostring(hash)..' key:'..tostring(key))
-  print(table.show(self))
   return nothing
 end
 
@@ -522,7 +523,6 @@ function Collision:modify(shift, fn, key_hash, key)
 end
 
 function IndexedNode:modify(shift, fn, hash, key)
-  assert(shift <= 32)
   local mask = self.mask
   local children = self.children
   local frag = band(rshift(hash, shift), MASK)
@@ -554,14 +554,18 @@ function IndexedNode:modify(shift, fn, hash, key)
     return nil
   elseif removed then
     local node = children[bxor(index, 1) + 1] -- NOTICE: 0 index to 1 index
-    assert(slow_len(children) == #children)
+    -- IndexedNode are a sparse arrays with a bitmap used to decode true
+    -- position. The children are stored in a dense array and inserted
+    -- sequentially so the below should always be true.
+    --assert(slow_len(children) == #children)
     if #children <= 2 and isLeaf(node) then
       return node
     else
       return IndexedNode.new(bitmap, arraySpliceOut(index, children))
     end
   elseif added then
-    assert(slow_len(children) == #children)
+    -- see note above, the below should always be true
+    --assert(slow_len(children) == #children)
     if #children >= MAX_INDEX_NODE then
       return expand(frag, child, mask, children)
     else
@@ -710,8 +714,18 @@ function Leaf:fold(fn, starting_value)
   return fn(starting_value, self)
 end
 
+-- adapted from the code in Polyfill section
+-- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
 local function reduce(array, fn, starting_value)
-  assert(false)
+  local value = starting_value
+  
+  for i = 1, #array do
+    local item = array[i]
+    if item ~= nil then
+      value = fn(value, item)
+    end
+  end
+  return value
 end
 function Collision:fold(fn, starting_value)
   return reduce(self.children, fn, starting_value)
@@ -720,12 +734,12 @@ end
 function IndexedNode:fold(fn, starting_value)
   local children = self.children
   local folded_value = starting_value
-  -- this assumption_below does not hold sometimes!!!
-  assert(slow_len(children) == #children)
-  -- thus this can't be used!!!
-  --for i = 1, #children do
-  for i = 1, MAX_INDEX_NODE do
-    local child = children[i] -- normally 0 index to 1 index, but just iterating over
+  -- The below assumption does hold since children is a normal dense array with no holes
+  --assert(slow_len(children) == #children)
+  -- Thus the below is not necessary
+  --for i = 1, MAX_INDEX_NODE do
+  for i = 1, #children do
+    local child = children[i] -- NOTICE: normally 0 index to 1 index, but just iterating over
     if child then
       if getmetatable(child) == LeafMetatable then
         folded_value = fn(folded_value, child)
@@ -740,12 +754,13 @@ end
 function ArrayNode:fold(fn, starting_value)
   local children = self.children
   local folded_value = starting_value
-  -- this assumption_below does not hold sometimes!!!
+
+  -- this assumption below does not hold sometimes!!!
   --assert(slow_len(children) == #children)
   -- thus this can't be used!!!
   --for i = 1, #children do
   for i = 1, BUCKET_SIZE do
-    local child = children[i] -- normally 0 index to 1 index, but just iterating over
+    local child = children[i] -- NOTICE: normally 0 index to 1 index, but just iterating over
     if child then
       if getmetatable(child) == LeafMetatable then
         folded_value = fn(folded_value, child)
