@@ -77,16 +77,24 @@ end
 -- These functions' arguments are 0 index based, meaning 0 is the first element
 -- of the array, but still produce Lua array that are 1 based
 --------------------------------------------------------------------------------
+
+-- from my tests in correctness_tests.lua, THIS CLASS OF FUNCTIONS IS THE BOTTLENECK
 function M.arrayUpdate(index, new_value, array, max_bounds)
+  -- do not use this, instead use the specialized versions
+  assert(false)
   -- pre allocate an array part with 32 slots. this seems to speed things up
   -- since the following copy phase doesn't need to trigger a re-hash
   -- TODO: this might use way too much memory
-  local copy = {
-    nil, nil, nil, nil, nil, nil, nil, nil,
-    nil, nil, nil, nil, nil, nil, nil, nil,
-    nil, nil, nil, nil, nil, nil, nil, nil,
-    nil, nil, nil, nil, nil, nil, nil, nil,
-  }
+  --local copy = {
+    --nil, nil, nil, nil, nil, nil, nil, nil,
+    --nil, nil, nil, nil, nil, nil, nil, nil,
+    --nil, nil, nil, nil, nil, nil, nil, nil,
+    --nil, nil, nil, nil, nil, nil, nil, nil,
+  --}
+  -- In an ideal world, we would like to use this below. However, since we are
+  -- copying afterwards, we trigger unnecessary resizings of the array part, which
+  -- With an exhaustive bounds in the correctness_tests.lua, above does use like 80MB more memory.
+  local copy = {}
 
   -- how unfortunate it can't be the below since the '#" operator doesn't
   -- always work properly on an array with holes like in Javascript
@@ -107,6 +115,47 @@ function M.arrayUpdate(index, new_value, array, max_bounds)
   return copy
 end
 local arrayUpdate = M.arrayUpdate
+
+local function arrayUpdate_ArrayNode(index, new_value, array)
+  local copy = {
+    -- make sure this is equal to BUCKET_SIZE
+    nil, nil, nil, nil, nil, nil, nil, nil,
+    nil, nil, nil, nil, nil, nil, nil, nil,
+    nil, nil, nil, nil, nil, nil, nil, nil,
+    nil, nil, nil, nil, nil, nil, nil, nil,
+  }
+  for i = 1, BUCKET_SIZE do
+    copy[i] = array[i]
+  end
+  copy[index + 1] = new_value
+  return copy
+end
+
+local function arrayUpdate_IndexedNode(index, new_value, array)
+  -- according to the profile, this does not matter that much?
+  --local copy = {
+    -- make sure this is equal to MAX_INDEX_NODE
+    --nil, nil, nil, nil,
+    --nil, nil, nil, nil,
+    --nil, nil, nil, nil,
+    --nil, nil, nil, nil,
+  --}
+  local copy = {}
+  for i = 1, MAX_INDEX_NODE do
+    copy[i] = array[i]
+  end
+  copy[index + 1] = new_value
+  return copy
+end
+
+local function arrayUpdate_Collision(index, new_value, array)
+  local copy = {}
+  for i = 1, #array do
+    copy[i] = array[i]
+  end
+  copy[index + 1] = new_value
+  return copy
+end
 
 function M.arraySpliceOut(index, array)
   -- these assumptions always seem to hold so bounds fixing like the JavaScript
@@ -422,7 +471,7 @@ local function updateCollisionList(hash, list, update_fn, key)
   if value == nothing then
     return arraySpliceOut(i, list)
   else
-    return arrayUpdate(i, Leaf.new(hash, key, value), list, len + 1)
+    return arrayUpdate_Collision(i, Leaf.new(hash, key, value), list)
   end
 end
 
@@ -572,7 +621,7 @@ function IndexedNode:modify(shift, fn, hash, key)
       return IndexedNode.new(bitmap, arraySpliceIn(index, child, children))
     end
   else
-    return IndexedNode.new(bitmap, arrayUpdate(index, child, children, MAX_INDEX_NODE))
+    return IndexedNode.new(bitmap, arrayUpdate_IndexedNode(index, child, children))
   end
 end
 
@@ -583,15 +632,15 @@ function ArrayNode:modify(shift, fn, hash, key)
   local child = children[frag + 1] -- NOTICE: 0 index to 1 index
   local newChild = alter(child, shift + SIZE, fn, hash, key)
   if child == nil and newChild ~= nil then
-    return ArrayNode.new(count + 1, arrayUpdate(frag, newChild, children, BUCKET_SIZE))
+    return ArrayNode.new(count + 1, arrayUpdate_ArrayNode(frag, newChild, children))
   elseif child ~= nil and newChild == nil then
     if (count - 1) <= MIN_ARRAY_NODE then
       return pack(frag, children)
     else
-      return ArrayNode.new(count - 1, arrayUpdate(frag, nil, children, BUCKET_SIZE))
+      return ArrayNode.new(count - 1, arrayUpdate_ArrayNode(frag, nil, children))
     end
   else
-    return ArrayNode.new(count, arrayUpdate(frag, newChild, children, BUCKET_SIZE))
+    return ArrayNode.new(count, arrayUpdate_ArrayNode(frag, newChild, children))
   end
 end
 

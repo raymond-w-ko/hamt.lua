@@ -12,7 +12,7 @@ local bounds = 0x1FFFFF
 -- O(mn) where m is bounds and n is current size, which is close to O(n^2)
 --
 -- use statistical sampling to check only some of the time to avoid this
-local count_check_rate = 0.0001
+local count_check_rate = 0.0000
 
 local existing_keys = {}
 local data = {}
