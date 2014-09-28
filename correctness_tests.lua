@@ -3,9 +3,17 @@ local hamt = require('hamt')
 
 math.randomseed(42)
 
-local bounds = 0xFFFFF
+-- if bounds is 0x2FFFFF, then LuaJIT crashes due to out of memory limitations
+-- since it causes around 1.8 GB of memory to be used. the limit is probably
+-- lower on 64 bit Linux due to how MAP_32bit works?
+local bounds = 0x1FFFFF
 
---local file = io.open('data.txt', 'w')
+-- since count() uses fold() which is O(n) checking every step would make it
+-- O(mn) where m is bounds and n is current size, which is close to O(n^2)
+--
+-- use statistical sampling to check only some of the time to avoid this
+local count_check_rate = 0.0001
+
 local existing_keys = {}
 local data = {}
 for i = 1, bounds do
@@ -23,20 +31,16 @@ for i = 1, bounds do
     print('need to increase random int space')
     assert(false)
   end
+
   local value = math.random()
 
-  --file:write(key)
-  --file:write(' ')
-  --file:write(value)
-  --file:write('\n')
-
-  table.insert(data, {key, })
+  table.insert(data, {key, value})
 end
---file:close()
+print('memory used to store data: '..collectgarbage('count'))
 
 local map = nil
 
-local x = os.clock()
+local start_time = os.clock()
 
 local function h(key)
   io.write('key: ')
@@ -46,9 +50,9 @@ local function h(key)
   io.write('\n')
 end
 
-h("85035710")
-h("27815778")
-h("14756006")
+--h("85035710")
+--h("27815778")
+--h("14756006")
 
 -- add
 for i = 1, bounds do
@@ -60,6 +64,7 @@ for i = 1, bounds do
 
   map = hamt.set(key, value, map)
 
+  -- too slow, causes O(n^2) explosision since count() is O(n)
   --local count = hamt.count(map)
   --if i ~= count then
     --print('key: '..tostring(key))
@@ -67,17 +72,25 @@ for i = 1, bounds do
     --print(table.show(map))
     --assert(false)
   --end
+  
+  if math.random() < count_check_rate then
+    assert(hamt.count(map) == i)
+  end
 
   local fetched_value = hamt.get(key, map)
   if value ~= fetched_value then
-    print('key:'..key)
-    print('hash:'..hamt.hash(key))
-    print('value:'..value)
-    print('fetched_value:'..tostring(fetched_value))
+    print('did not retrieve immediately inserted key value pair')
+    print('key: '..key)
+    print('hash: '..hamt.hash(key))
+    print('value: '..value)
+    print('fetched_value: '..tostring(fetched_value))
     assert(false)
   end
 end
+
 assert(hamt.count(map) == bounds)
+
+table.shuffle(data)
 
 for i = 1, bounds do
   local datum = data[i]
@@ -86,10 +99,11 @@ for i = 1, bounds do
 
   local fetched_value = hamt.get(key, map)
   if fetched_value ~= value then
-    print(key)
-    print(hamt.hash(key))
-    print(value)
-    print(fetched_value)
+    print('retrieved wrong value for key')
+    print('key: '..key)
+    print('hash: '..hamt.hash(key))
+    print('value: '..value)
+    print('fetched_value'..fetched_value)
     assert(false)
   end
 end
@@ -100,6 +114,7 @@ for i = bounds, 1, -1 do
   local key = datum[1]
   map = hamt.remove(key, map)
 
+  -- too slow, causes O(n^2) explosision since count() is O(n)
   --local count = hamt.count(map)
   --if (i - 1) ~= count then
     --print('key: '..tostring(key))
@@ -107,6 +122,12 @@ for i = bounds, 1, -1 do
     --print(table.show(map))
     --assert(false)
   --end
+
+  if math.random() <= count_check_rate then
+    assert(hamt.count(map) == (i - 1))
+  end
 end
+
 assert(hamt.count(map) == 0)
-print(os.clock() - x)
+
+print(os.clock() - start_time)
