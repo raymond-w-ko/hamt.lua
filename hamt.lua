@@ -1,5 +1,7 @@
 -- Hash Array Mapped Tries (Bagwell Tries)
+--
 -- basically a port from https://github.com/mattbierner/hamt.git
+-- lots of thanks to him providing the Javascript / Kepri implementation
 local M = {}
 
 local band
