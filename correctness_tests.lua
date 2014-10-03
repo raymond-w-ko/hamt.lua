@@ -1,7 +1,10 @@
+print('starting memory usage: '..collectgarbage('count'))
+
 require('util')
 local hamt = require('hamt')
 
 math.randomseed(42)
+math.randomseed(666)
 
 -- if bounds is 0x2FFFFF, then LuaJIT crashes due to out of memory limitations
 -- since it causes around 1.8 GB of memory to be used. the limit is probably
@@ -14,6 +17,7 @@ local bounds = 0x1FFFFF
 -- use statistical sampling to check only some of the time to avoid this
 local count_check_rate = 0.0000
 
+local file = io.open('data.txt', 'wb')
 local existing_keys = {}
 local data = {}
 for i = 1, bounds do
@@ -35,7 +39,14 @@ for i = 1, bounds do
   local value = math.random()
 
   table.insert(data, {key, value})
+
+  file:write(key)
+  file:write(' ')
+  file:write(value)
+  file:write('\n')
 end
+file:close()
+file = nil
 print('memory used to store data: '..collectgarbage('count'))
 
 local map = nil
@@ -131,3 +142,15 @@ end
 assert(hamt.count(map) == 0)
 
 print(os.clock() - start_time)
+
+data = nil
+existing_keys = nil
+collectgarbage()
+print('memory used to store persistent: '..collectgarbage('count'))
+
+map = nil
+hamt = nil
+collectgarbage()
+collectgarbage()
+collectgarbage()
+print('final memory: '..collectgarbage('count'))
