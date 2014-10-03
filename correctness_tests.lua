@@ -17,7 +17,7 @@ local bounds = 0x1FFFFF
 -- use statistical sampling to check only some of the time to avoid this
 local count_check_rate = 0.0000
 
-local file = io.open('data.txt', 'wb')
+--local file = io.open('data.txt', 'wb')
 local existing_keys = {}
 local data = {}
 for i = 1, bounds do
@@ -40,13 +40,13 @@ for i = 1, bounds do
 
   table.insert(data, {key, value})
 
-  file:write(key)
-  file:write(' ')
-  file:write(value)
-  file:write('\n')
+  --file:write(key)
+  --file:write(' ')
+  --file:write(value)
+  --file:write('\n')
 end
-file:close()
-file = nil
+--file:close()
+--file = nil
 print('memory used to store data: '..collectgarbage('count'))
 
 local map = nil
