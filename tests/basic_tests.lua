@@ -55,7 +55,7 @@ print(string.format('%x', hamt.hash('asdf')))
 local text = {}
 for i = 1, 100000 do table.insert(text, 'a') end
 text = table.concat(text)
-print(string.format('%x', hamt.hash(text)))
+--print(string.format('%x', hamt.hash(text)))
 
 local function benchmark(fn)
   collectgarbage()
