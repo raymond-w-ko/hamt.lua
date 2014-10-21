@@ -71,6 +71,11 @@ print('memory used to store data: '..collectgarbage('count'))
 
 local map = nil
 
+-- this crashes LuaJIT due to out of memory,
+-- but on my laptop and Lua 5.1 reduce runtime from 80 seconds to 60 seconds
+--collectgarbage()
+--collectgarbage('stop')
+
 local start_time = os.clock()
 
 local function h(key)
