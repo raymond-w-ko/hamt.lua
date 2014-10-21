@@ -132,6 +132,7 @@ local function arrayUpdate_ArrayNode(index, new_value, array)
   copy[index + 1] = new_value
   return copy
 end
+M.arrayUpdate_ArrayNode = arrayUpdate_ArrayNode
 
 local function arrayUpdate_IndexedNode(index, new_value, array)
   -- according to the profile, this does not matter that much?
