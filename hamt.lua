@@ -133,7 +133,9 @@ function M.arrayUpdate(index, new_value, array, max_bounds)
 end
 local arrayUpdate = M.arrayUpdate
 
+-- THIS IS THE BOTTLENECK, probably due to Lua's and convesely LuaJIT's poor GC
 local function arrayUpdate_ArrayNode(index, new_value, array)
+  -- this is the intent
   local copy = {
     -- make sure this is equal to BUCKET_SIZE
     nil, nil, nil, nil, nil, nil, nil, nil,
@@ -144,7 +146,18 @@ local function arrayUpdate_ArrayNode(index, new_value, array)
   for i = 1, BUCKET_SIZE do
     copy[i] = array[i]
   end
+
+  -- unrolled version actually hurts performance
+  --local copy = {
+    ---- make sure this is equal to BUCKET_SIZE
+    --array[ 1], array[ 2], array[ 3], array[ 4], array[ 5], array[ 6], array[ 7], array [8],
+    --array[ 9], array[10], array[11], array[12], array[13], array[14], array[15], array[16],
+    --array[17], array[18], array[19], array[20], array[21], array[22], array[23], array[24],
+    --array[25], array[26], array[27], array[28], array[29], array[30], array[31], array[32],
+  --}
+
   copy[index + 1] = new_value
+
   return copy
 end
 M.arrayUpdate_ArrayNode = arrayUpdate_ArrayNode
