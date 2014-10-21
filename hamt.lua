@@ -29,7 +29,7 @@ else
   if _G.__STRICT then
     global('bit')
   end
-  require('bit')
+  local bit = require('bit')
   band = bit.band
   arshift = bit.arshift
   rshift = bit.rshift
