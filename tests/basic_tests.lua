@@ -1,4 +1,4 @@
-require('util')
+require('tests.util')
 local hamt = require('hamt')
 
 -- popcount test
@@ -26,7 +26,7 @@ local arr = {'angel', 'clown', 'mandarin', 'surgeon'}
 
 print('peristent array update')
 print('--------------------------------------------------------------------------------')
-local arr1 = hamt.arrayUpdate(1, 'psycho', arr)
+local arr1 = hamt.arrayUpdate_ArrayNode(1, 'psycho', arr)
 print(table.show(arr1))
 print(table.show(arr))
 
