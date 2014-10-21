@@ -57,7 +57,7 @@ else
     local line = lines[i]
     if line:len() > 0 then
       local tokens = line:split(' ')
-      local key = tonumber(tokens[1])
+      local key = tokens[1]
       local value = tonumber(tokens[2])
       table.insert(data, {key, value})
     end
