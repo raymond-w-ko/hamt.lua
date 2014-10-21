@@ -1,6 +1,6 @@
 print('starting memory usage: '..collectgarbage('count'))
 
-require('util')
+require('tests.util')
 local hamt = require('hamt')
 
 math.randomseed(42)
@@ -141,6 +141,7 @@ end
 
 assert(hamt.count(map) == 0)
 
+print('benchmark time: ')
 print(os.clock() - start_time)
 
 data = nil
