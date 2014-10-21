@@ -4,7 +4,7 @@ require('tests.util')
 local hamt = require('hamt')
 
 math.randomseed(42)
-math.randomseed(666)
+--math.randomseed(666)
 
 -- if bounds is 0x2FFFFF, then LuaJIT crashes due to out of memory limitations
 -- since it causes around 1.8 GB of memory to be used. the limit is probably
@@ -17,36 +17,53 @@ local bounds = 0x1FFFFF
 -- use statistical sampling to check only some of the time to avoid this
 local count_check_rate = 0.0000
 
---local file = io.open('data.txt', 'wb')
-local existing_keys = {}
+local GEN_DATA = false
+
 local data = {}
-for i = 1, bounds do
-  local key
-  for try = 1, 64 do
-    key = tostring(math.random(1, 100000000))
-    if existing_keys[key] == nil then
-      existing_keys[key] = true
-      break
-    else
-      key = nil
+
+if GEN_DATA then
+  local file = io.open('references/data.txt', 'wb')
+  local existing_keys = {}
+  for i = 1, bounds do
+    local key
+    for try = 1, 64 do
+      key = tostring(math.random(1, 100000000))
+      if existing_keys[key] == nil then
+        existing_keys[key] = true
+        break
+      else
+        key = nil
+      end
+    end
+    if key == nil then
+      print('need to increase random int space')
+      assert(false)
+    end
+
+    local value = math.random()
+
+    table.insert(data, {key, value})
+
+    file:write(key)
+    file:write(' ')
+    file:write(value)
+    file:write('\n')
+  end
+  file:close()
+else
+  local file = io.open('references/data.txt', 'r')
+  local lines = file:read('*all'):split('\n')
+  for i = 1, #lines do
+    local line = lines[i]
+    if line:len() > 0 then
+      local tokens = line:split(' ')
+      local key = tonumber(tokens[1])
+      local value = tonumber(tokens[2])
+      table.insert(data, {key, value})
     end
   end
-  if key == nil then
-    print('need to increase random int space')
-    assert(false)
-  end
-
-  local value = math.random()
-
-  table.insert(data, {key, value})
-
-  --file:write(key)
-  --file:write(' ')
-  --file:write(value)
-  --file:write('\n')
+  file:close()
 end
---file:close()
---file = nil
 print('memory used to store data: '..collectgarbage('count'))
 
 local map = nil
