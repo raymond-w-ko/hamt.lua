@@ -13,7 +13,7 @@ local bor
 local bnot
 local bxor
 -- LuaJIT has builtin bit manipulation primitives that get JITed, so use these
-if type(jit) == 'table' then
+if rawget(_G, 'jit') and type(jit) == 'table' then
   band = bit.band
   arshift = bit.arshift
   rshift = bit.rshift
@@ -23,9 +23,24 @@ if type(jit) == 'table' then
   bnot = bit.bnot
   bxor = bit.bxor
 else
-  -- TODO: if not running in LuaJIT, other bit manipulation functions are
-  -- necessary
-  assert(false)
+  -- if you are running plain Lua, get Mike Pall's BitOp, which is used in LuaJIT
+  -- DO NOT use Lua 5.2 bit32 as that has different semantics and is untested.
+
+  if _G.__STRICT then
+    global('bit')
+  end
+  require('bit')
+  band = bit.band
+  arshift = bit.arshift
+  rshift = bit.rshift
+  lshift = bit.lshift
+  tobit = bit.tobit
+  bor = bit.bor
+  bnot = bit.bnot
+  bxor = bit.bxor
+
+  -- in Lua 5.2, bit32.bnot(0) would == 0xFFFFFFFF, which is not the same
+  assert(bnot(0) == -1)
 end
 
 local function slow_len(t)
