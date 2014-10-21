@@ -20,10 +20,10 @@ local count_check_rate = 0.0000
 local GEN_DATA = false
 
 local data = {}
+local existing_keys = {}
 
 if GEN_DATA then
   local file = io.open('references/data.txt', 'wb')
-  local existing_keys = {}
   for i = 1, bounds do
     local key
     for try = 1, 64 do
@@ -63,6 +63,9 @@ else
     end
   end
   file:close()
+end
+if #data < bounds then
+  bounds = #data
 end
 print('memory used to store data: '..collectgarbage('count'))
 

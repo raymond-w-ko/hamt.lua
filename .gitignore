@@ -1,1 +1,2 @@
-output.txt
+/tests/lua_output.txt
+/tests/luajit_output.txt
