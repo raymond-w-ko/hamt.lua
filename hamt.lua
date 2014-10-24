@@ -256,7 +256,7 @@ local arraySpliceIn = M.arraySpliceIn
 --------------------------------------------------------------------------------
 -- get 32 bit hash of string
 function M.hash(str)
-  if type(str) == 'number' then return str end
+  --if type(str) == 'number' then return str end
 
   local hash = 0
   for i = 1, str:len() do
