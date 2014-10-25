@@ -4,6 +4,15 @@
 -- lots of thanks to him providing the Javascript / Kepri implementation
 local M = {}
 
+local equals = function(a, b)
+  return a == b
+end
+
+function M.setEqualsFunction(fn)
+  assert(type(fn) == 'function')
+  equals = fn
+end
+
 local band
 local arshift
 local rshift
@@ -485,7 +494,7 @@ local function updateCollisionList(hash, list, update_fn, key)
   --assert(slow_len(list) == len)
   while i < len do
     local child = list[i + 1] -- NOTICE: 0 index to 1 index
-    if child.key == key then
+    if equals(child.key, key) then
       target = child
       break
     end
@@ -510,7 +519,7 @@ end
 local lookup
 
 function Leaf:lookup(_1, _2, key)
-  if self.key == key then
+  if equals(self.key, key) then
     return self.value
   else
     return nothing
@@ -524,7 +533,7 @@ function Collision:lookup(_, hash, key)
     local len = #children
     while i < len do
       local child = children[i + 1] -- NOTICE: 0 index to 1 index
-      if child.key == key then
+      if equals(child.key, key) then
         return child.value
       end
 
@@ -566,7 +575,7 @@ end
 local alter
 
 function Leaf:modify(shift, fn, hash, key)
-  if self.key == key then
+  if equals(self.key, key) then
     local value = fn(self.value)
     if value == nothing then
       return nil
