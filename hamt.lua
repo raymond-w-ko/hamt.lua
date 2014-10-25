@@ -133,7 +133,8 @@ function M.arrayUpdate(index, new_value, array, max_bounds)
 end
 local arrayUpdate = M.arrayUpdate
 
--- THIS IS THE BOTTLENECK, probably due to Lua's and convesely LuaJIT's poor GC
+-- THIS IS THE BOTTLENECK, probably due to Lua's and converse LuaJIT's poor GC
+-- Maybe a custom memory allocator will also make this faster.
 local function arrayUpdate_ArrayNode(index, new_value, array)
   -- this is the intent
   local copy = {
