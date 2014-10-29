@@ -76,6 +76,11 @@ local map = nil
 --collectgarbage()
 --collectgarbage('stop')
 
+-- on my desktop with Lua 5.2, this shaves off 2 seconds off a 60 second
+-- runtime compared to the default incremental. Too bad this will be remmoved
+-- in Lua 5.3
+--collectgarbage('generational')
+
 local start_time = os.clock()
 
 local function h(key)
